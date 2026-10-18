@@ -1,23 +1,14 @@
-import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
+import { readFileSync } from 'node:fs';
 
-export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, '.', '');
-    return {
-      server: {
-        port: 3000,
-        host: '0.0.0.0',
-      },
-      plugins: [react()],
-      define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
-      },
-      resolve: {
-        alias: {
-          '@': path.resolve(__dirname, '.'),
-        }
-      }
-    };
+export default defineConfig({
+  base: './',
+  server: { host: '127.0.0.1', port: 4175 },
+  plugins: [{
+    name: 'repair-calculation-module',
+    generateBundle() {
+      // The existing HTML uses Babel's browser module loader.
+      this.emitFile({type:'asset', fileName:'repair-core.js', source:readFileSync(new URL('./repair-core.js', import.meta.url))});
+    },
+  }],
 });

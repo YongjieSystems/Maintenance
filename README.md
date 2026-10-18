@@ -1,20 +1,44 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 永捷維修費估價程式 v2.1.0
 
-# Run and deploy your AI Studio app
+第一階段更新：修正報價一致性、建立案件與版本、加強輸入檢查，並改善手機介面。原有價目表、350 元／小時計價及交機加價設定保持不變。
 
-This contains everything you need to run your app locally.
+## 員工操作
 
-View your app in AI Studio: https://ai.studio/apps/drive/1ZLFE3Ep29PcY1vvOb6qfqf6pmDNYdSJ1
+1. 輸入原本存取密碼，按「進入系統」。
+2. 按「＋ 新案件」，依序選設備類型、設備分類與故障問題。
+3. 檢查預估零件費、工時、運費；必要時填額外費用及說明。
+4. 填客戶、序號、報價人員及備註。畫面上的「可能處理」是參考項目，檢測前不代表一定需要更換。
+5. 若直接修改總額，與原明細的差額會列為「報價調整」。有差額時必須填調整原因；單一金額仍屬待客戶確認的估價。
+6. 按「儲存報價」。複製摘要、Excel、儲存並列印也會保存目前版本；若內容沒變，重複操作不會增加版本。
+7. 下一位客戶請按「＋ 新案件」，避免沿用上一位客戶資料。尚未儲存的內容會先詢問是否放棄。
 
-## Run Locally
+金額不可為負數，最高價不得低於最低價，折扣不得超過最低費用小計，金額最多兩位小數。紅色提示存在時，儲存及匯出按鈕會停用；請先修正提示內容。
 
-**Prerequisites:**  Node.js
+## 案件與備份
 
+- 「估價紀錄」保存同一案件的各個報價版本；修改已儲存案件後再儲存，會建立新版本。舊版本保持可複製、匯出。
+- v2.1.0 新增紀錄支援「載入編輯」；先前舊紀錄沒有完整表單資料，仍可複製與匯出。
+- 不再自動截掉第 50 筆以外的紀錄，但瀏覽器儲存空間仍有限。
+- 「案件備份」下載 JSON 檔，包含價目表及已儲存報價版本，不包含尚未儲存的畫面內容。
+- 「還原案件」選擇案件備份 JSON，會合併缺少的紀錄，保留目前已有的案件、版本及價目表；相同單號與版本以目前已有資料為準。此操作不匯入備份內的價目表。
+- 「資料庫管理 → 價目表備份」只下載價目表 JSON，不是整套可離線執行的 APP，也不包含歷史案件。
+- 請定期備份。資料只存在目前瀏覽器，換電腦或清除網站資料不會自動恢復。儲存失敗時會顯示提示並停止列印。
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+本階段沒有新增多人同步或主管帳號核准。特殊折扣仍須依公司規定取得主管同意，程式不會把文字提醒當成已完成核准。沿用的共用密碼畫面也不構成真正的後端權限保護。
+
+## 開發與部署
+
+需要 Node.js 及套件管理工具；本程式不需要 Gemini API 金鑰。
+
+```sh
+pnpm install
+pnpm test
+pnpm build
+pnpm dev
+```
+
+開發網址為 `http://127.0.0.1:4175/`。`index.html` 保留既有瀏覽器 Babel 架構，計價與驗證集中在 `repair-core.js`，響應式樣式在 `interface.css`。
+
+GitHub Pages 從原有根目錄發布時，必須一起發布 `index.html`、`repair-core.js` 與 `interface.css`。若改用建置產物，部署完整 `dist/`；Vite 會一併輸出計價模組及 CSS。React、Tailwind、Babel、Excel 套件等仍使用既有外部 CDN，使用時需要網路。
+
+測試涵蓋原始價目表不變、上下限與負數驗證、手動調整差額、案件版本、重複匯出、歷史載入、備份合併、儲存失敗及交機加價。

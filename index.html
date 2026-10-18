@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>維修費估價程式v2.0 | 專業維修估價系統</title>
+    <title>維修費估價程式v2.1.0 | 專業維修估價系統</title>
     
     <!-- Error Handling Script (Must be first) -->
     <script>
@@ -88,15 +88,16 @@
       }
     }
     </script>
-<link rel="stylesheet" href="/index.css">
+<link rel="stylesheet" href="./interface.css">
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased h-screen overflow-hidden">
     <div id="root" class="h-full"></div>
 
     <!-- Main Application Logic -->
     <script type="text/babel" data-type="module">
-        import React, { useState, useEffect, useMemo } from 'react';
+        import React, { useState, useEffect, useMemo, useRef } from 'react';
         import ReactDOM from 'react-dom/client';
+        import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue } from './repair-core.js';
         import { 
           Monitor, Laptop, Printer, Droplet, HardDrive, Cpu, 
           Wrench, ChevronRight, AlertCircle, Clock, Save, 
@@ -874,6 +875,7 @@
 
           const handleSubmit = (e) => {
             e.preventDefault();
+            if (activeTab === 'issue' && !validateIssue({estimatedCostMin:issueMin, estimatedCostMax:issueMax, estimatedTimeHours:issueTime})) return alert('價格及工時須為非負有效數字，且最高價不得小於最低價。');
             if (activeTab === 'category') {
               onSave('category', { name: catName, iconName: 'Wrench' });
             } else if (activeTab === 'model') {
@@ -1009,11 +1011,11 @@
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                               <label className="block text-sm font-medium text-slate-700 mb-1">最低估價</label>
-                              <input type="number" placeholder="最低估價" required value={issueMin} onChange={(e) => setIssueMin(e.target.value)} className="w-full border border-slate-300 rounded-lg px-4 py-2" />
+                              <input type="number" min="0" max="100000000" placeholder="最低估價" required value={issueMin} onChange={(e) => setIssueMin(e.target.value)} className="w-full border border-slate-300 rounded-lg px-4 py-2" />
                           </div>
                           <div>
                               <label className="block text-sm font-medium text-slate-700 mb-1">最高估價</label>
-                              <input type="number" placeholder="最高估價" required value={issueMax} onChange={(e) => setIssueMax(e.target.value)} className="w-full border border-slate-300 rounded-lg px-4 py-2" />
+                              <input type="number" min="0" max="100000000" placeholder="最高估價" required value={issueMax} onChange={(e) => setIssueMax(e.target.value)} className="w-full border border-slate-300 rounded-lg px-4 py-2" />
                           </div>
                         </div>
                         <div className="text-xs text-slate-500 -mt-3 px-1">設定維修費用的價格區間 (不含額外零件的預估值)。</div>
@@ -1021,7 +1023,7 @@
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                               <label className="block text-sm font-medium text-slate-700 mb-1">預估工時 (hr)</label>
-                              <input type="number" placeholder="工時" step="0.5" required value={issueTime} onChange={(e) => setIssueTime(e.target.value)} className="w-full border border-slate-300 rounded-lg px-4 py-2" />
+                              <input type="number" min="0" max="100000000" placeholder="工時" step="0.5" required value={issueTime} onChange={(e) => setIssueTime(e.target.value)} className="w-full border border-slate-300 rounded-lg px-4 py-2" />
                               <p className="text-xs text-slate-500 mt-1">預估完修所需的標準工時 (小時)。</p>
                           </div>
                           <div>
@@ -1038,7 +1040,7 @@
                              <RefreshCw className="w-4 h-4" /> 重置
                           </button>
                           <button type="button" onClick={onDownloadBackup} className="flex items-center gap-1.5 px-3 py-2 text-indigo-600 hover:bg-indigo-50 rounded-lg text-sm font-medium transition-colors border border-transparent hover:border-indigo-100">
-                              <Download className="w-4 h-4" /> 備份並下載 APP
+                              <Download className="w-4 h-4" /> 價目表備份
                           </button>
                       </div>
                       <div className="flex gap-3">
@@ -1087,6 +1089,7 @@
                  finalData.estimatedTimeHours = Number(finalData.estimatedTimeHours);
               }
               
+              if (target.type === 'issue' && !validateIssue(finalData)) return alert('價格及工時須為非負有效數字，且最高價不得小於最低價。');
               onSave(target.type, target.data.id, finalData, target.parentId);
               onClose();
            };
@@ -1134,18 +1137,18 @@
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="block text-sm font-medium text-slate-700">最低估價</label>
-                                        <input type="number" required value={formData.estimatedCostMin || 0} onChange={e => handleChange('estimatedCostMin', e.target.value)} className="w-full border border-slate-300 rounded-lg px-4 py-2" />
+                                        <input type="number" min="0" max="100000000" required value={formData.estimatedCostMin || 0} onChange={e => handleChange('estimatedCostMin', e.target.value)} className="w-full border border-slate-300 rounded-lg px-4 py-2" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="block text-sm font-medium text-slate-700">最高估價</label>
-                                        <input type="number" required value={formData.estimatedCostMax || 0} onChange={e => handleChange('estimatedCostMax', e.target.value)} className="w-full border border-slate-300 rounded-lg px-4 py-2" />
+                                        <input type="number" min="0" max="100000000" required value={formData.estimatedCostMax || 0} onChange={e => handleChange('estimatedCostMax', e.target.value)} className="w-full border border-slate-300 rounded-lg px-4 py-2" />
                                     </div>
                                 </div>
                                 <div className="text-xs text-slate-500 -mt-2">修改維修費用的預估範圍。</div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="block text-sm font-medium text-slate-700">工時 (小時)</label>
-                                        <input type="number" step="0.5" required value={formData.estimatedTimeHours || 0} onChange={e => handleChange('estimatedTimeHours', e.target.value)} className="w-full border border-slate-300 rounded-lg px-4 py-2" />
+                                        <input type="number" min="0" max="100000000" step="0.5" required value={formData.estimatedTimeHours || 0} onChange={e => handleChange('estimatedTimeHours', e.target.value)} className="w-full border border-slate-300 rounded-lg px-4 py-2" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="block text-sm font-medium text-slate-700">零件 (逗號分隔)</label>
@@ -1167,7 +1170,7 @@
         }
 
         // History Modal
-        const HistoryModal = ({ isOpen, onClose, history, onCopy, onExcel }) => {
+        const HistoryModal = ({ isOpen, onClose, history, onCopy, onExcel, onLoad }) => {
             if (!isOpen) return null;
 
             return (
@@ -1176,7 +1179,7 @@
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
                             <div className="flex items-center gap-2">
                                 <History className="w-5 h-5 text-primary-600" />
-                                <h3 className="text-xl font-bold text-slate-800">歷史估價紀錄 (最近50筆)</h3>
+                                <h3 className="text-xl font-bold text-slate-800">歷史估價紀錄（本機保存）</h3>
                             </div>
                             <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
                                 <X className="w-5 h-5 text-slate-500" />
@@ -1200,9 +1203,9 @@
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
                                         {history.map((item) => (
-                                            <tr key={item.timestamp} className="hover:bg-slate-50 transition-colors">
+                                            <tr key={`${item.orderId}-${item.revision || item.timestamp}`} className="hover:bg-slate-50 transition-colors">
                                                 <td className="px-6 py-4">
-                                                    <div className="font-medium text-slate-900">{item.orderId}</div>
+                                                    <div className="font-medium text-slate-900">{item.orderId} / 第 {item.revision || 1} 版</div>
                                                     <div className="text-slate-500 text-xs">{item.dateStr}</div>
                                                 </td>
                                                 <td className="px-6 py-4">
@@ -1216,6 +1219,7 @@
                                                     <div className="text-emerald-600 font-mono text-xs">{item.totalText}</div>
                                                 </td>
                                                 <td className="px-6 py-4 text-right space-x-2">
+                                                    <button disabled={!item.draft} onClick={() => onLoad(item)} className="px-3 py-2 rounded-lg bg-blue-50 text-blue-700 disabled:opacity-40">載入編輯</button>
                                                     <button onClick={() => onCopy(item)} className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-primary-50 text-slate-700 hover:text-primary-600 rounded-lg transition-colors border border-slate-200">
                                                         <Copy className="w-3.5 h-3.5" /> 複製
                                                     </button>
@@ -1298,7 +1302,7 @@
             }
 
             // 3. Fallback to LocalStorage if available
-            if (localData) {
+            if (Array.isArray(localData) && localData.every(cat => cat && typeof cat.name === 'string' && Array.isArray(cat.models) && cat.models.every(model => model && Array.isArray(model.issues)))) {
                 return localData;
             }
 
@@ -1306,14 +1310,16 @@
             return INITIAL_DATA;
           });
 
+          const firstCatalogueRender = useRef(true);
           // Save to LocalStorage whenever data changes
           useEffect(() => {
+             if (firstCatalogueRender.current) {firstCatalogueRender.current = false; return;}
              try {
                 localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(data));
                 // Update local timestamp to 'now' every time data changes to keep it fresh
                 localStorage.setItem(TS_STORAGE_KEY, Date.now().toString());
              } catch (e) {
-                console.error("Error saving data to local storage", e);
+                setStorageError("價目表尚未儲存成功，請下載價目表備份，並檢查瀏覽器儲存空間。");
              }
           }, [data]);
 
@@ -1326,36 +1332,45 @@
           const [editingTarget, setEditingTarget] = useState(null);
           const [deleteTarget, setDeleteTarget] = useState(null);
           
-          const [orderId] = useState(() => 'R' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0'));
+          const [orderId, setOrderId] = useState(() => { try { const saved = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || '[]'); return createOrderId(Array.isArray(saved) ? saved : []); } catch { return createOrderId(); } });
+          const [storageError, setStorageError] = useState('');
+          const [saveMessage, setSaveMessage] = useState('');
 
           // History State
           const [history, setHistory] = useState(() => {
               try {
                   const saved = localStorage.getItem(HISTORY_STORAGE_KEY);
-                  return saved ? JSON.parse(saved) : [];
+                  const parsed = saved ? JSON.parse(saved) : []; return Array.isArray(parsed) ? parsed.filter(item => item && typeof item.orderId === 'string' && Array.isArray(item.activeParts) && Array.isArray(item.handoverItems)) : [];
               } catch (e) {
                   console.error("Error loading history", e);
                   return [];
               }
           });
 
-          // Save history to localStorage
-          useEffect(() => {
-              try {
-                  localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
-              } catch(e) {
-                  console.error("Error saving history", e);
-              }
-          }, [history]);
-
           const addToHistory = (item) => {
-              setHistory(prev => {
-                  const newHistory = [item, ...prev];
-                  return newHistory.slice(0, 50); // Keep max 50 records
-              });
+              try {
+                  const stored = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || '[]');
+                  if (!Array.isArray(stored)) throw new Error('Invalid saved history');
+                  const conflict = stored.some(old => old.orderId === item.orderId && (old.revision || 1) === item.revision && old.fingerprint !== item.fingerprint);
+                  if (conflict) {
+                      setHistory(stored);
+                      setStorageError('其他分頁已更新此案件，請確認目前版本後再儲存；原紀錄未被覆蓋。');
+                      return false;
+                  }
+                  const updated = [item, ...stored.filter(old => !(old.orderId === item.orderId && (old.revision || 1) === item.revision))];
+                  localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(updated));
+                  setHistory(updated);
+                  setStorageError('');
+                  setSaveMessage('已儲存 ' + item.orderId + ' / 第 ' + item.revision + ' 版（本機）');
+                  return true;
+              } catch (error) {
+                  setStorageError('本機儲存失敗，請先下載案件備份；目前資料尚未安全保存。');
+                  return false;
+              }
           };
 
           const [note, setNote] = useState({
+            adjustmentReason: '',
             technicianNotes: '',
             customPartsCost: 0,
             customPartName: '',
@@ -1392,38 +1407,38 @@
           const selectedModel = useMemo(() => selectedCategory?.models.find(m => m.id === selectedModelId), [selectedCategory, selectedModelId]);
           const selectedIssue = useMemo(() => selectedModel?.issues.find(i => i.id === selectedIssueId), [selectedModel, selectedIssueId]);
 
-          useEffect(() => { setSelectedModelId(null); setSelectedIssueId(null); }, [selectedCategoryId]);
+
           useEffect(() => { 
               // Special logic for Handover category: Auto-select the dummy issue to enable Estimate view
               if (selectedCategoryId === 'new-used-equipment' && selectedModelId) {
                   if (selectedModelId === 'new-handover-model') {
-                      setSelectedIssueId('issue_new_handover_base');
+                      const issue = selectedModel?.issues.find(i => i.id === 'issue_new_handover_base'); if (issue && !selectedIssueId) selectIssue(issue);
                   } else if (selectedModelId === 'used-handover-model') {
-                      setSelectedIssueId('issue_used_handover_base');
+                      const issue = selectedModel?.issues.find(i => i.id === 'issue_used_handover_base'); if (issue && !selectedIssueId) selectIssue(issue);
                   }
-              } else {
-                  setSelectedIssueId(null); 
               }
           }, [selectedModelId, selectedCategoryId]);
 
-          useEffect(() => {
-            if (selectedIssue) {
+          const selectIssue = (issue) => {
+            setSelectedIssueId(issue.id);
+            if (issue) {
               setNote(prev => ({
                 ...prev,
-                finalEstimatedTime: selectedIssue.estimatedTimeHours,
+                finalEstimatedTime: issue.estimatedTimeHours,
                 customPartsCost: 0,
                 customPartName: '',
                 customLaborCost: 0,
                 activeParts: [], // CHANGED FROM [...selectedIssue.potentialParts]
                 shippingCost: 0,
                 specialDiscount: 0,
+                adjustmentReason: '',
                 manualTotalMin: '',
                 manualTotalMax: '',
                 manualBasePartsCost: '',
                 manualLaborRate: LABOR_RATE,
               }));
             }
-          }, [selectedIssue]);
+          };
 
           // --- COST CALCULATION LOGIC ---
           const baseLaborCost = selectedIssue ? selectedIssue.estimatedTimeHours * LABOR_RATE : 0;
@@ -1439,7 +1454,7 @@
           const safeDiscount = note.specialDiscount === '' ? 0 : Number(note.specialDiscount);
           
           const effectiveLaborRate = note.manualLaborRate !== '' ? Number(note.manualLaborRate) : LABOR_RATE;
-          const totalLaborCost = safeLaborTime * effectiveLaborRate;
+          const totalLaborCost = money(safeLaborTime * effectiveLaborRate);
 
           const totalPartsCostMin = effectiveBasePartsMin + safeCustomParts;
           const totalPartsCostMax = effectiveBasePartsMax + safeCustomParts;
@@ -1466,32 +1481,59 @@
                if (handoverState.otherDevice) handoverItemsList.push('協助安裝其他設備');
           }
 
-          const calcTotalMin = totalPartsCostMin + totalLaborCost + safeShipping + handoverCost - safeDiscount;
-          const calcTotalMax = totalPartsCostMax + totalLaborCost + safeShipping + handoverCost - safeDiscount;
-
-          let grandTotalMin, grandTotalMax, isFixedPrice;
-
-          if (note.manualTotalMin !== '') {
-              grandTotalMin = Number(note.manualTotalMin);
-              if (note.manualTotalMax !== '') {
-                  grandTotalMax = Number(note.manualTotalMax);
-                  isFixedPrice = false;
-              } else {
-                  grandTotalMax = Number(note.manualTotalMin);
-                  isFixedPrice = true;
-              }
-          } else {
-              grandTotalMin = calcTotalMin;
-              grandTotalMax = calcTotalMax;
-              isFixedPrice = (calcTotalMin === calcTotalMax); 
+          const quote = calculateQuote(note, basePartsCostMin, basePartsCostMax, handoverCost);
+          if (isHandover && handoverState.pcDriver && handoverState.pcCountType === '7+' &&
+              (!Number.isFinite(Number(handoverState.pcManualPrice)) || Number(handoverState.pcManualPrice) < 0)) {
+              quote.errors.push('交機加價請輸入非負數字。');
           }
-
-          if (!isFixedPrice && grandTotalMax < grandTotalMin) {
-              grandTotalMax = grandTotalMin;
-          }
-
+          const grandTotalMin = quote.min, grandTotalMax = quote.max;
+          const isFixedPrice = grandTotalMin === grandTotalMax;
+          const fingerprint = JSON.stringify({selectedCategoryId, selectedModelId, selectedIssueId, note, handoverState,
+              category: selectedCategory?.name, model: selectedModel?.name, issue: selectedIssue, totals: [quote.min, quote.max]});
+          const revision = quoteVersion(history, orderId, fingerprint);
+          const handleNewCase = () => {
+              if (selectedIssue && !history.some(item => item.orderId === orderId && item.fingerprint === fingerprint) &&
+                  !confirm('目前報價尚未儲存。確定放棄畫面內容，建立新案件？')) return;
+              setOrderId(createOrderId(history));
+              setSelectedCategoryId(null); setSelectedModelId(null); setSelectedIssueId(null);
+              setNote(prev => Object.fromEntries(Object.entries(prev).map(([key, value]) => [key,
+                  key === 'manualLaborRate' ? LABOR_RATE : key === 'quotationDepartment' ? '維修服務部' :
+                  Array.isArray(value) ? [] : typeof value === 'number' ? 0 : ''])));
+              setHandoverState({pcDriver:false, pcCountType:'1-3', pcManualPrice:0, dataCopy:false, siteCheck:false, swTransfer:false, wifiSetup:false, otherDevice:false});
+              setSaveMessage('已建立新案件，客戶、設備及費用已清空。');
+          };
+          const handleLoadHistory = (item) => {
+              if (!item.draft || !item.draft.note || !Array.isArray(item.draft.note.activeParts) || !item.draft.handoverState) return alert('此舊版紀錄可複製或匯出，但未包含可編輯資料。');
+              if (!data.some(cat => cat.id === item.draft.categoryId && cat.models.some(model => model.id === item.draft.modelId && model.issues.some(issue => issue.id === item.draft.issueId)))) return alert('價目表已移除此設備或故障，請建立新案件；原紀錄仍可匯出。');
+              if (selectedIssue && !history.some(old => old.orderId === orderId && old.fingerprint === fingerprint) && !confirm('目前有未儲存內容，確定載入歷史案件？')) return;
+              setOrderId(item.orderId);
+              setSelectedCategoryId(item.draft.categoryId);
+              setSelectedModelId(item.draft.modelId);
+              setSelectedIssueId(item.draft.issueId);
+              setNote({...item.draft.note, adjustmentReason:item.draft.note.adjustmentReason || ''}); setHandoverState(item.draft.handoverState);
+              setShowHistoryModal(false); setSaveMessage('已載入案件；修改後儲存會保留新版本。');
+          };
+          const handleRestoreBackup = async (event) => {
+              const file = event.target.files?.[0]; event.target.value=''; if (!file) return;
+              try {
+                  if (file.size > 20 * 1024 * 1024) throw new Error('備份檔超過 20 MB');
+                  const backup = JSON.parse(await file.text());
+                  if (backup.format !== 'yjst-maintenance-backup' || backup.version !== 1 || !Array.isArray(backup.history) || !backup.history.every(item => typeof item.orderId === 'string' && typeof item.totalText === 'string' && Number.isFinite(item.timestamp) && Array.isArray(item.activeParts) && Array.isArray(item.handoverItems) && (!item.draft || (item.draft.note && Array.isArray(item.draft.note.activeParts) && item.draft.handoverState)))) throw new Error('備份格式不正確');
+                  const existing = new Set(history.map(item => item.orderId + ':' + (item.revision || item.timestamp)));
+                  const additions = backup.history.filter(item => !existing.has(item.orderId + ':' + (item.revision || item.timestamp)));
+                  const merged = [...history, ...additions].sort((a,b) => b.timestamp-a.timestamp);
+                  localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(merged)); setHistory(merged);
+                  setSaveMessage('已合併還原 ' + additions.length + ' 筆案件版本；現有案件與價目表保持原狀。'); setStorageError('');
+              } catch (error) { alert('無法還原：' + error.message + '。現有資料未更動。'); }
+          };
+          const handleCaseBackup = () => {
+              const content = JSON.stringify({format:'yjst-maintenance-backup', version:1, exportedAt:new Date().toISOString(), data, history}, null, 2);
+              const url = URL.createObjectURL(new Blob([content], {type:'application/json'}));
+              const a = document.createElement('a'); a.href=url; a.download='永捷維修案件備份-'+new Date().toISOString().slice(0,10)+'.json'; a.click(); URL.revokeObjectURL(url);
+          };
 
           const handleAddData = (type, newData, parentId) => {
+            if (type === 'issue' && !validateIssue(newData)) return alert('價格及工時須為非負有效數字，且最高價不得小於最低價。');
             const id = Math.random().toString(36).substr(2, 9);
             if (type === 'category') {
               setData([...data, { ...newData, id, models: [] }]);
@@ -1506,6 +1548,7 @@
           };
 
           const handleUpdateData = (type, id, updatedData, parentId) => {
+              if (type === 'issue' && !validateIssue(updatedData)) return alert('價格及工時須為非負有效數字，且最高價不得小於最低價。');
               if (type === 'category') {
                   setData(data.map(cat => cat.id === id ? { ...cat, ...updatedData } : cat));
               } else if (type === 'model') {
@@ -1543,44 +1586,8 @@
 
           // Function to inject current data into source code and download it
           const handleDownloadBackup = () => {
-              let htmlContent = document.documentElement.outerHTML;
-              
-              // Generate the new content to inject
-              const timestamp = Date.now();
-              const dataString = JSON.stringify(data, null, 2);
-              
-              // We replace the entire block between the markers
-              const newInjectedBlock = `
-        // --- BEGIN_INJECTED_DATA ---
-        const BACKUP_TIMESTAMP = ${timestamp};
-        const INITIAL_DATA = ${dataString};
-        // --- END_INJECTED_DATA ---`;
-
-              // Regex to match the block. We use [\s\S]*? to match across newlines.
-              const regex = /(\/\/ --- BEGIN_INJECTED_DATA ---)[\s\S]*?(\/\/ --- END_INJECTED_DATA ---)/;
-              
-              if (htmlContent.match(regex)) {
-                  let newHtml = htmlContent.replace(regex, newInjectedBlock);
-                  
-                  // Clean up the rendered root
-                  newHtml = newHtml.replace(/(<div id="root"[^>]*>)([\s\S]*?)(<\/div>)/, '$1$3');
-
-                  const finalHtml = `<!DOCTYPE html>\n${newHtml}`;
-
-                  const blob = new Blob([finalHtml], {type: 'text/html'});
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `YJST_Repair_App_v2_${new Date().toISOString().slice(0,10)}.html`;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  URL.revokeObjectURL(url);
-                  
-                  alert("備份檔已下載！\n\n新檔案已包含您最新的資料，且會優先於舊瀏覽紀錄讀取。");
-              } else {
-                  alert("系統錯誤：無法定位資料區塊，備份失敗。");
-              }
+              const url = URL.createObjectURL(new Blob([JSON.stringify({format:'yjst-maintenance-pricebook', version:1, exportedAt:new Date().toISOString(), data}, null, 2)], {type:'application/json'}));
+              const a=document.createElement('a'); a.href=url; a.download='永捷維修價目表-'+new Date().toISOString().slice(0,10)+'.json'; a.click(); URL.revokeObjectURL(url);
           };
 
           const openEditModal = (type, itemData, parentId = null) => {
@@ -1622,7 +1629,7 @@
           };
 
           const handlePrint = () => {
-             window.print();
+             const snap = buildSnapshot(); if (snap && addToHistory(snap)) window.print();
           };
 
           // --- REFACTORED COPY & EXPORT LOGIC ---
@@ -1630,6 +1637,7 @@
 
           const buildSnapshot = () => {
               if (!selectedIssue) return null;
+              if (quote.errors.length) { alert('請先修正：\n' + quote.errors.join('\n')); return null; }
               
               const basePartText = note.manualBasePartsCost !== '' 
                   ? `$${effectiveBasePartsMin.toLocaleString()}`
@@ -1646,7 +1654,13 @@
               return {
                   timestamp: Date.now(),
                   orderId: orderId,
-                  dateStr: new Date().toLocaleDateString(),
+                  revision, fingerprint,
+                  status: isFixedPrice ? '單一金額估價（待客戶確認）' : '預估範圍（待檢測確認）',
+                  adjustmentMin: quote.adjustmentMin, adjustmentMax: quote.adjustmentMax,
+                  adjustmentReason: note.adjustmentReason || '',
+                  handoverCost, totalMin:quote.min, totalMax:quote.max, calculatedMin:quote.calcMin, calculatedMax:quote.calcMax,
+                  draft: {categoryId:selectedCategoryId, modelId:selectedModelId, issueId:selectedIssueId, note:{...note}, handoverState:{...handoverState}},
+                  dateStr: new Date().toLocaleDateString('zh-TW', {timeZone:'Asia/Taipei'}),
                   customerName: note.customerName,
                   department: note.quotationDepartment,
                   personnel: note.quotationPersonnel,
@@ -1663,13 +1677,13 @@
                   activeParts: [...note.activeParts],
                   extraPartsLabel,
                   extraPartsName: note.customPartName,
-                  extraPartsCost: note.customPartsCost || 0,
+                  extraPartsCost: quote.extra,
                   handoverItems: [...handoverItemsList],
                   laborLabel,
                   laborCost: totalLaborCost,
                   laborHours: note.finalEstimatedTime,
-                  shipping: note.shippingCost || 0,
-                  discount: note.specialDiscount || 0,
+                  shipping: quote.shipping,
+                  discount: quote.discount,
                   totalText: totalText,
                   // Raw data for Excel
                   basePartValue: note.manualBasePartsCost !== '' ? effectiveBasePartsMin : `${basePartsCostMin} ~ ${basePartsCostMax}`,
@@ -1687,7 +1701,8 @@
 
               return `
 【維修估價單】
-單號: ${snap.orderId}    日期: ${snap.dateStr}
+單號: ${snap.orderId} / 第 ${snap.revision || 1} 版    日期: ${snap.dateStr}
+狀態: ${snap.status || '舊版估價紀錄'}
 ----------------
 客戶: ${snap.customerName || '未填寫'}
 報價人員: ${snap.department} / ${snap.personnel || '未填寫'}
@@ -1700,7 +1715,8 @@
 2. ${snap.extraPartsLabel}: ${snap.extraPartsName || '無'} ($${snap.extraPartsCost})
 ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0} hr)
 4. 運費: $${snap.shipping}
-5. 折扣: -$${snap.discount}
+5. 折扣: -${snap.discount}
+6. 報價調整: ${adjustmentText(snap.adjustmentMin || 0, snap.adjustmentMax || 0)}${snap.adjustmentReason ? `（${snap.adjustmentReason}）` : ''}
 ----------------
 【總金額】: ${snap.totalText}
 `;
@@ -1712,17 +1728,15 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
               
               const text = generateClipboardText(snap);
               navigator.clipboard.writeText(text).then(() => {
-                  // AUTO SAVE TO HISTORY
-                  addToHistory(snap);
-                  alert('估價單摘要已複製到剪貼簿，並已自動儲存至紀錄！');
-              });
+                  if (addToHistory(snap)) alert('摘要已複製，報價版本已儲存至本機。');
+              }).catch(() => alert('複製失敗，請確認瀏覽器允許剪貼簿操作。'));
           };
 
           const handleHistoryCopy = (item) => {
               const text = generateClipboardText(item);
               navigator.clipboard.writeText(text).then(() => {
                   alert('歷史紀錄已複製到剪貼簿！');
-              });
+              }).catch(() => alert('複製失敗，請確認瀏覽器允許剪貼簿操作。'));
           };
 
           const generateExcelFile = (snap) => {
@@ -1731,6 +1745,8 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
               const ws_data = [
                   ["維修估價單 (Estimate)", ""],
                   ["單號", snap.orderId],
+                  ["版本", snap.revision || 1],
+                  ["狀態", snap.status || "舊版估價紀錄"],
                   ["日期", snap.dateStr],
                   ["客戶姓名", snap.customerName || ''],
                   ["報價部門", snap.department],
@@ -1745,15 +1761,17 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                   [],
                   ["費用項目", "金額 / 說明"],
                   ["----------------", "----------------"],
-                  [isHandover ? "預設設備費" : "預設零件費", snap.basePartValue],
+                  [snap.partsLabel, snap.basePartValue],
                   ["更換零件明細", snap.activeParts.join(', ')],
-                  [isHandover ? "額外設備費" : "額外零件及技術費", snap.extraPartsCost],
+                  [snap.extraPartsLabel, snap.extraPartsCost],
                   [snap.extraPartsDescLabel, snap.extraPartsName],
                   ...snap.handoverItems.map(item => ["交機項目", item]),
                   [snap.laborLabel, snap.laborCost],
                   ["工時 (hr)", snap.laborHours],
                   ["運費", snap.shipping],
                   ["特殊折扣", snap.discount],
+                  ["報價調整", adjustmentText(snap.adjustmentMin || 0, snap.adjustmentMax || 0)],
+                  ["調整原因", snap.adjustmentReason || ""],
                   [],
                   ["總金額", snap.totalText]
               ];
@@ -1766,7 +1784,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
 
           const handleExportExcel = () => {
               const snap = buildSnapshot();
-              if (snap) generateExcelFile(snap);
+              if (snap && addToHistory(snap)) generateExcelFile(snap);
           };
 
           const handleHistoryExcel = (item) => {
@@ -1829,17 +1847,20 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
               }
               
               return (
-                <div className="flex flex-col h-full bg-slate-50 text-slate-800 font-sans">
+                <div className={`${quote.errors.length ? 'invalid-quote ' : ''}app-shell flex flex-col h-full bg-slate-50 text-slate-800 font-sans`}>
                   {/* ... (App Render Content as before) ... */}
                   {/* Header */}
-                  <header className="no-print bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 shadow-sm flex-shrink-0 z-20">
+                  <header className="app-header no-print bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 shadow-sm flex-shrink-0 z-20">
                     <div className="flex items-center gap-3">
                       <div className="bg-primary-600 p-2 rounded-lg"><Wrench className="text-white w-5 h-5" /></div>
                       <div>
                         <h1 className="text-lg font-bold text-slate-800 leading-tight">維修費估價程式</h1>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="header-actions flex gap-2">
+                        <button onClick={handleNewCase} className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium">＋ 新案件</button>
+                        <label className="restore-backup px-4 py-2 bg-slate-100 rounded-lg text-sm cursor-pointer">還原案件<input aria-label="還原案件備份" type="file" accept=".json,application/json" onChange={handleRestoreBackup} className="hidden" /></label>
+                        <button onClick={handleCaseBackup} className="px-4 py-2 bg-slate-100 rounded-lg text-sm">案件備份</button>
                         <button onClick={() => setShowHistoryModal(true)} className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors">
                           <History className="w-4 h-4" /><span>估價紀錄</span>
                         </button>
@@ -1849,6 +1870,12 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                     </div>
                   </header>
 
+                  <div className="case-status no-print" role="status">
+                    <strong>{orderId} / 第 {revision} 版 · v2.1.0</strong>
+                    <span>資料僅保存在此瀏覽器，請定期下載案件備份。</span>
+                    {saveMessage && <span>{saveMessage}</span>}
+                    {storageError && <p role="alert" className="text-red-700">{storageError}</p>}
+                  </div>
                   {/* PRINT LAYOUT HEADER */}
                   <div className="print-only p-8 border-b-2 border-slate-800 mb-6">
                      <div className="flex justify-between items-center">
@@ -1860,17 +1887,17 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                            </div>
                         </div>
                         <div className="text-right">
-                           <p className="text-lg font-mono font-bold text-slate-700">單號: {orderId}</p>
+                           <p className="text-lg font-mono font-bold text-slate-700">單號: {orderId} / 第 {revision} 版</p>
                            <p className="text-sm text-slate-500">日期: {new Date().toLocaleDateString()}</p>
                         </div>
                      </div>
                   </div>
 
                   {/* Main Content Layout */}
-                  <div className="flex flex-1 overflow-hidden print-container">
+                  <div className="workspace flex flex-1 overflow-hidden print-container">
                     
                     {/* LEFT COLUMN: Selection Area */}
-                    <div className="no-print w-7/12 flex flex-col h-full border-r border-slate-200 bg-white">
+                    <div className="selection-pane no-print w-7/12 flex flex-col h-full border-r border-slate-200 bg-white">
                       <div className="flex-1 overflow-y-auto p-6 space-y-8 pb-20">
                         <section>
                           <SectionTitle>1. 選擇設備類型</SectionTitle>
@@ -1879,7 +1906,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                               <Card 
                                 key={cat.id} 
                                 active={selectedCategoryId === cat.id} 
-                                onClick={() => setSelectedCategoryId(cat.id)} 
+                                onClick={() => {setSelectedCategoryId(cat.id); setSelectedModelId(null); setSelectedIssueId(null);}}
                                 onEdit={() => openEditModal('category', cat)}
                                 onDelete={() => handleDeleteRequest('category', cat.id, null, cat.name)}
                                 className="flex flex-col items-center justify-center p-6 gap-3 text-center h-32"
@@ -1893,7 +1920,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
 
                         {selectedCategoryId && (
                           <section className="animate-fade-in">
-                             <SectionTitle>2. 選擇設備型號</SectionTitle>
+                             <SectionTitle>2. 選擇設備分類</SectionTitle>
                              {selectedCategory?.models.length === 0 ? (
                                 <div className="p-8 border-2 border-dashed border-slate-200 rounded-xl text-center text-slate-400">無資料</div>
                              ) : (
@@ -1902,7 +1929,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                                    <Card 
                                      key={model.id} 
                                      active={selectedModelId === model.id} 
-                                     onClick={() => setSelectedModelId(model.id)} 
+                                     onClick={() => {setSelectedModelId(model.id); setSelectedIssueId(null);}}
                                      onEdit={() => openEditModal('model', model, selectedCategoryId)}
                                      onDelete={() => handleDeleteRequest('model', model.id, selectedCategoryId, model.name)}
                                      className="flex items-center gap-4"
@@ -1953,7 +1980,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                                                      <div className="relative flex items-center">
                                                         <span className="absolute left-2 text-slate-400">$</span>
                                                         <input 
-                                                            type="number" 
+                                                            type="number" min="0" max="100000000"
                                                             placeholder="輸入金額" 
                                                             className="w-24 border border-slate-300 rounded px-2 pl-5 py-1 text-xs focus:ring-1 focus:ring-primary-500 focus:border-primary-500 outline-none" 
                                                             value={handoverState.pcManualPrice} 
@@ -1997,7 +2024,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                                     <Card 
                                         key={issue.id} 
                                         active={selectedIssueId === issue.id} 
-                                        onClick={() => setSelectedIssueId(issue.id)} 
+                                        onClick={() => selectIssue(issue)}
                                         onEdit={() => openEditModal('issue', issue, selectedModelId)}
                                         onDelete={() => handleDeleteRequest('issue', issue.id, selectedModelId, issue.name)}
                                         className="flex items-start gap-4 p-5"
@@ -2011,7 +2038,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                                             <div className="flex justify-between items-end mt-3">
                                                 <div className="flex flex-wrap gap-2">
                                                 {issue.potentialParts.map(part => (
-                                                    <span key={part} className="text-xs px-2 py-1 bg-orange-50 text-orange-700 border border-orange-100 rounded">需更換: {part}</span>
+                                                    <span key={part} className="text-xs px-2 py-1 bg-orange-50 text-orange-700 border border-orange-100 rounded">可能處理: {part}</span>
                                                 ))}
                                                 </div>
                                                 <span className="text-xs font-medium px-2 py-1 bg-slate-100 text-slate-600 rounded-md flex-shrink-0 ml-2">約 {issue.estimatedTimeHours} 小時</span>
@@ -2029,14 +2056,14 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                     </div>
 
                     {/* RIGHT COLUMN: Estimate & Work Area */}
-                    <div className="w-5/12 bg-slate-50 border-l border-slate-200 flex flex-col h-full shadow-inner overflow-hidden print-container print:w-full print:border-none print:bg-white print:shadow-none">
+                    <div className="estimate-pane w-5/12 bg-slate-50 border-l border-slate-200 flex flex-col h-full shadow-inner overflow-hidden print-container print:w-full print:border-none print:bg-white print:shadow-none">
                       
                       <div className="no-print p-6 bg-white border-b border-slate-200 flex-shrink-0">
                          <div className="flex items-center gap-2 mb-2">
                            <Calculator className="w-5 h-5 text-emerald-600" />
                            <h2 className="text-lg font-bold text-slate-800">維修估價單 (Estimate)</h2>
                          </div>
-                         <p className="text-sm text-slate-500">{selectedIssue ? '已生成建議報價與工時及運費' : '請在左側選擇故障項目以產生報價'}</p>
+                         <p className="text-sm text-slate-500">{selectedIssue ? '已生成建議報價與工時及運費' : '請先選擇設備及故障項目以產生報價'}</p>
                       </div>
 
                       <div className="flex-1 overflow-y-auto p-6 space-y-6 print:p-0 print:overflow-visible print:pb-32">
@@ -2072,9 +2099,9 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                                <div className="flex justify-between items-end mb-4 border-b border-slate-100 pb-4">
                                   <div>
                                     <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">
-                                        {isFixedPrice ? '確認維修金額' : '預估總費用範圍'}
+                                        {quote.errors.length ? '資料待修正，請勿報價' : isFixedPrice ? '單一金額估價（待客戶確認）' : '預估總費用範圍'}
                                     </p>
-                                    <div className="text-3xl font-bold text-emerald-600 flex items-baseline gap-1 print:text-black">
+                                    <div className="quote-total text-3xl font-bold text-emerald-600 flex items-baseline gap-1 print:text-black">
                                       <span>${grandTotalMin.toLocaleString()}</span>
                                       {!isFixedPrice && (
                                           <>
@@ -2103,7 +2130,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                                             <Package className="w-4 h-4 text-slate-400" />
                                             <span>{isHandover ? '設備費用' : '零件費用'}</span>
                                         </div>
-                                        <ul className="text-sm space-y-2 pl-6">
+                                        <ul className="cost-lines text-sm space-y-2 pl-6">
                                             <li className="flex justify-between text-slate-600">
                                                 <span>
                                                     {isHandover ? '預設設備費' : '預設維修零件'}
@@ -2222,7 +2249,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                                             </div>
                                             <ul className="text-sm space-y-2 pl-6">
                                                 <li className="flex justify-between text-red-600 font-medium">
-                                                  <span>特殊折扣 (主管授權)</span>
+                                                  <span>特殊折扣（核准流程尚未串接）</span>
                                                   <span className="font-mono">- ${note.specialDiscount}</span>
                                                 </li>
                                             </ul>
@@ -2232,6 +2259,12 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                                </div>
                             </div>
 
+                            {quote.adjusted && <div className="adjustment-line bg-amber-50 border border-amber-200 rounded-xl p-4">
+                              <strong>報價調整：{adjustmentText(quote.adjustmentMin, quote.adjustmentMax)}</strong>
+                              <p>原因：{note.adjustmentReason || '尚未填寫，無法儲存或匯出'}</p>
+                              <p className="text-sm">原明細合計 {amountText(quote.calcMin, quote.calcMax)} ＋ 調整差額 ＝ 報價總額 {amountText(quote.min, quote.max)}</p>
+                            </div>}
+                            {quote.errors.length > 0 && <div role="alert" className="validation-errors no-print bg-red-50 text-red-800 border border-red-200 rounded-xl p-4"><strong>請先修正以下內容，才能儲存、複製、匯出或列印：</strong><ul>{quote.errors.map(error => <li key={error}>{error}</li>)}</ul></div>}
                             {/* Manual Adjustments Panel */}
                             <div className="no-print bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-5">
                               <h4 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
@@ -2250,7 +2283,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                                             <div className="relative">
                                                 <span className="absolute left-3 top-2 text-slate-400">$</span>
                                                 <input 
-                                                    type="number" 
+                                                    type="number" min="0" max="100000000"
                                                     value={note.manualBasePartsCost} 
                                                     onChange={(e) => setNote({...note, manualBasePartsCost: e.target.value})} 
                                                     className="w-full text-sm border border-slate-300 rounded pl-6 pr-3 py-2 placeholder-slate-300" 
@@ -2265,7 +2298,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                                             <div className="relative">
                                                 <span className="absolute left-3 top-2 text-slate-400">$</span>
                                                 <input 
-                                                    type="number" 
+                                                    type="number" min="0" max="100000000"
                                                     value={note.customPartsCost} 
                                                     onChange={(e) => setNote({...note, customPartsCost: e.target.value === '' ? '' : Number(e.target.value)})} 
                                                     className="w-full text-sm border border-slate-300 rounded pl-6 pr-2 py-2" 
@@ -2295,7 +2328,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                                           <div className="relative">
                                               <Truck className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
                                               <input 
-                                                type="number" 
+                                                type="number" min="0" max="100000000"
                                                 value={note.shippingCost} 
                                                 onChange={(e) => setNote({...note, shippingCost: e.target.value === '' ? '' : Number(e.target.value)})} 
                                                 className="w-full text-sm border border-slate-300 rounded pl-9 pr-3 py-2" 
@@ -2312,7 +2345,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                                               <div className="flex items-center gap-2">
                                                   <label className="text-[10px] text-slate-500 font-medium">工時</label>
                                                   <input 
-                                                      type="number" 
+                                                      type="number" min="0" max="100000000"
                                                       step="0.5" 
                                                       value={note.finalEstimatedTime} 
                                                       onChange={(e) => setNote({...note, finalEstimatedTime: e.target.value === '' ? '' : Number(e.target.value)})} 
@@ -2325,7 +2358,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                                                   <div className="relative w-16">
                                                       <span className="absolute left-1.5 top-1 text-slate-400 text-[10px]">$</span>
                                                   <input 
-                                                      type="number" 
+                                                      type="number" min="0" max="100000000"
                                                       value={note.manualLaborRate} 
                                                       onChange={(e) => setNote({...note, manualLaborRate: e.target.value === '' ? '' : Number(e.target.value)})} 
                                                       className="w-full text-xs border border-slate-300 rounded pl-3 pr-1 py-1 text-center bg-white focus:ring-1 focus:ring-primary-500" 
@@ -2340,12 +2373,12 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                                   <div>
                                       <label className="text-xs font-bold text-red-500 mb-1 flex items-center gap-1">
                                         <ShieldAlert className="w-3 h-3" />
-                                        特殊折扣 (需主管同意)
+                                        特殊折扣（請依公司規定取得主管同意）
                                       </label>
                                       <div className="relative">
                                           <span className="absolute left-3 top-2 text-red-400">- $</span>
                                           <input 
-                                            type="number" 
+                                            type="number" min="0" max="100000000"
                                             value={note.specialDiscount} 
                                             onChange={(e) => setNote({...note, specialDiscount: e.target.value === '' ? '' : Number(e.target.value)})} 
                                             className="w-full text-sm border border-red-200 bg-red-50 text-red-700 rounded pl-8 pr-3 py-2 focus:ring-red-500 focus:border-red-500" 
@@ -2354,16 +2387,17 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                                       </div>
                                   </div>
                                   
+                                  <div><label className="block text-sm font-medium mb-2" htmlFor="adjustment-reason">報價調整原因（有差額時必填）</label><input id="adjustment-reason" value={note.adjustmentReason} onChange={e => setNote({...note, adjustmentReason:e.target.value})} className="w-full border border-slate-300 rounded p-2" placeholder="例如：專案議價、整包服務價格" /></div>
                                   {/* Total Override */}
                                   <div className="pt-4 border-t border-slate-100">
-                                      <label className="text-xs font-medium text-slate-500 block mb-2">手動修改總金額 (若輸入則覆蓋自動計算)</label>
+                                      <label className="text-xs font-medium text-slate-500 block mb-2">手動總額（差額會列為報價調整）</label>
                                       <div className="grid grid-cols-2 gap-4">
                                           <div>
                                              <label className="text-[10px] text-slate-400 block mb-1">最低 / 單一金額</label>
                                              <div className="relative">
                                                  <span className="absolute left-3 top-2 text-slate-400">$</span>
                                                  <input 
-                                                    type="number" 
+                                                    type="number" min="0" max="100000000"
                                                     value={note.manualTotalMin} 
                                                     onChange={(e) => setNote({...note, manualTotalMin: e.target.value})} 
                                                     className="w-full text-sm border border-slate-300 rounded pl-6 pr-3 py-2 placeholder-slate-300" 
@@ -2376,7 +2410,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                                              <div className="relative">
                                                  <span className="absolute left-3 top-2 text-slate-400">$</span>
                                                  <input 
-                                                    type="number" 
+                                                    type="number" min="0" max="100000000"
                                                     value={note.manualTotalMax} 
                                                     onChange={(e) => setNote({...note, manualTotalMax: e.target.value})} 
                                                     className="w-full text-sm border border-slate-300 rounded pl-6 pr-3 py-2 placeholder-slate-300" 
@@ -2470,20 +2504,21 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
 
                       {/* Action Bar */}
                       {selectedIssue && (
-                        <div className="no-print p-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="action-bar no-print p-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                            <div className="text-xs text-slate-400">最後更新: {new Date().toLocaleDateString()}</div>
                            <div className="flex gap-2">
-                               <button onClick={handleCopySummary} className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-lg font-medium transition-colors" title="複製文字摘要">
+                               <button disabled={quote.errors.length > 0} onClick={() => {const snap = buildSnapshot(); if (snap) addToHistory(snap);}} className="flex items-center justify-center bg-primary-600 text-white px-4 py-2 rounded-lg">儲存報價</button>
+                               <button disabled={quote.errors.length > 0} onClick={handleCopySummary} className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-lg font-medium transition-colors" title="複製文字摘要">
                                  <Copy className="w-4 h-4" />
-                                 <span className="hidden sm:inline">複製摘要</span>
+                                 <span>複製摘要</span>
                                </button>
                                
-                               <button onClick={handleExportExcel} className="flex items-center gap-2 bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2.5 rounded-lg font-medium transition-colors border border-green-200" title="匯出 Excel">
+                               <button disabled={quote.errors.length > 0} onClick={handleExportExcel} className="flex items-center gap-2 bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2.5 rounded-lg font-medium transition-colors border border-green-200" title="匯出 Excel">
                                  <FileSpreadsheet className="w-4 h-4" />
-                                 <span className="hidden sm:inline">轉成 Excel</span>
+                                 <span>Excel</span>
                                </button>
                                
-                               <button onClick={handlePrint} className="flex items-center gap-2 bg-[#FFAF60] hover:bg-[#ff9f40] text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow active:scale-95">
+                               <button disabled={quote.errors.length > 0} onClick={handlePrint} className="flex items-center gap-2 bg-[#FFAF60] hover:bg-[#ff9f40] text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow active:scale-95">
                                  <Save className="w-4 h-4" />
                                  儲存並列印
                                </button>
@@ -2514,6 +2549,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                     onClose={() => setShowHistoryModal(false)}
                     history={history}
                     onCopy={handleHistoryCopy}
+                    onLoad={handleLoadHistory}
                     onExcel={handleHistoryExcel}
                   />
                 </div>
@@ -2528,6 +2564,6 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
-<script type="module" src="/index.tsx"></script>
+
 </body>
 </html>
