@@ -76,3 +76,7 @@ pnpm dev
 GitHub Pages 從原有根目錄發布時，必須一起發布 `index.html`、`interface.css`、`repair-core.js`、`repair-team.js`、`team-workspace.js`、`team-config.js`、`team-core.js` 及 `vendor/supabase.js`。若改用建置產物，部署完整 `dist/`。React、Tailwind、Babel、Excel 套件等仍使用既有外部 CDN，使用時需要網路。前端僅使用 publishable key；角色、核准、計價及站點規則在資料庫執行，沒有前端 service role key。
 
 測試涵蓋原始價目表不變、上下限與負數驗證、手動調整差額、案件版本、重複匯出、歷史載入、備份合併、儲存失敗及交機加價。
+
+## 客戶精簡報價（v2.3.1）
+
+複製及列印改為同一份客戶版，僅顯示非零費用、必要服務範圍及待確認條件。員工部門、內部成本、調價原因及作業編號不輸出；內部儲存與主管明細仍保留。維修Excel亦採相同精簡內容，整包議價只呈現整包費用，避免原明細與議價總額不一致。檢測費折抵、重疊收送扣除、已收參考及金額區間依原計算保留，價格與核准權限未變更。

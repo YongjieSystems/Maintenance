@@ -62,3 +62,45 @@ export function validateIssue(issue) {
   const values = [issue.estimatedCostMin, issue.estimatedCostMax, issue.estimatedTimeHours].map(Number);
   return values.every(n => Number.isFinite(n) && n >= 0 && n <= 100000000) && values[1] >= values[0];
 }
+
+// Customer exports deliberately exclude operational identifiers, cost logic and staff notes.
+export function customerRepairSummary(s, official=false) {
+ const cloud=Object.hasOwn(s,'caseId'),note=s.draft?.note||{},fmt=amountText;
+ const adjusted=!!s.adjusted || !!s.adjustmentMin || !!s.adjustmentMax;
+ const parts=cloud?fmt(s.partsMin,s.partsMax):s.basePartText;
+ const hasParts=cloud?(s.partsMin>0||s.partsMax>0):Number(s.basePartValue)>0||/\d*[1-9]/.test(parts||'');
+ const extra=cloud?s.extra:s.extraPartsCost, shipping=cloud?s.shipping:s.shipping;
+ return [
+ '【永捷維修'+(official?'正式報價':'估價草稿｜待確認')+'】',
+ '單號：'+s.orderId+'／第'+(s.revision||1)+'版',
+ ...(s.dateStr?['日期：'+s.dateStr]:[]),
+ ...((cloud?s.customer:s.customerName)?['客戶：'+(cloud?s.customer:s.customerName)]:[]),
+ '設備：'+[cloud?s.category:s.categoryName,cloud?s.model:s.modelName].filter(Boolean).join('／'),
+ ...((s.issue||s.issueName)?['處理：'+(s.issue||s.issueName)]:[]),
+ ...((cloud?note.serialNumber:s.serialNumber)?['序號：'+(cloud?note.serialNumber:s.serialNumber)]:[]),
+ '',
+ ...(adjusted?['維修整包費用：'+(cloud?fmt(s.repairMin,s.repairMax):s.totalText), '已含本案約定項目及服務'+(shipping>0?'（含本次收送）':'')+'。']:[
+ ...(hasParts?[(s.partsLabel||'零件／設備')+'：'+parts]:[]),
+ ...(extra>0?[(cloud?note.customPartName:s.extraPartsName)||'額外項目'].map(name=>name+'：'+fmt(extra)):[]),
+ ...((cloud?s.labor:s.laborCost)>0?[(s.laborLabel||'工資')+'：'+fmt(cloud?s.labor:s.laborCost)]:[]),
+ ...((cloud?s.handover:s.handoverCost)>0?['交機服務：'+fmt(cloud?s.handover:s.handoverCost)]:[]),
+ ...(shipping>0?['本次收送：'+fmt(shipping)]:[]),
+ ...(s.discount>0?['優惠：−'+fmt(s.discount)]:[]),
+ (cloud?'維修小計':'預估合計')+'：'+(cloud?fmt(s.repairMin,s.repairMax):s.totalText),
+ ]),
+ ...((cloud?note.activeParts:s.activeParts)?.length?['約定零件：'+(cloud?note.activeParts:s.activeParts).join('、')]:[]),
+ ...(s.handoverItems?.length?['交機項目：'+s.handoverItems.join('、')]:[]),
+ ...(cloud?[
+ ...(s.inspectionTotal>0?['原檢測與收送：'+fmt(s.inspectionTotal)]:[]),
+ ...(s.inspectionCredit>0?['檢測費折抵'+(official?'':'（待核准）')+'：−'+fmt(s.inspectionCredit)]:[]),
+ ...(s.transportOverlap>0?['重疊收送扣除：−'+fmt(s.transportOverlap)]:[]),
+ '案件合計：'+fmt(s.totalMin,s.totalMax),
+ ...(s.paidReference>0?['原已收紀錄參考：'+fmt(s.paidReference),'預估待收：'+fmt(s.remainingMin,s.remainingMax)+'（實際以收款紀錄核對）']:[]),
+ ...(s.deliveryWindow?['收送時段：'+s.deliveryWindow]:[]),
+ ]:[]),
+ '',
+ '以上依約定維修範圍估價；新增零件或費用須先取得同意。',
+ ...(!cloud?['檢測費折抵及收送依確認案件另列，勿與本單重複計費。']:[]),
+ ...(official?[]:['此為草稿，金額及服務內容確認、核准後另提供正式報價。']),
+ ].join('\n');
+}

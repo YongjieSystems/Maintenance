@@ -1,5 +1,5 @@
 import {initTeamWorkspace} from './team-workspace.js';
-import {amountText,adjustmentText} from './repair-core.js';
+import {amountText,adjustmentText,customerRepairSummary} from './repair-core.js?v=2.3.1';
 import {teamError} from './team-core.js';
 let resetLink=()=>{};
 export const resetRepairLink=()=>resetLink();
@@ -66,7 +66,7 @@ export function initRepairTeam(bridge){
    row.append(node('p',`${job.number} · 維修第 ${job.revision} 版 · ${job.workflow==='APPROVED'&&fresh?'已核准':'待核准／檢測版本已變更'}`,'font-bold'),node('p',`${source?.customer || job.case_id} · 共用案件 ${job.case_id}`,'text-sm break-all'));
    const detail=node('div',undefined,'text-sm whitespace-pre-wrap');row.append(detail);
    const readSnapshot=async revision=>check(await context.client.from('yj_repair_versions').select('snapshot').eq('case_id',job.case_id).eq('revision',revision).single()).snapshot;
-   button(row,'檢視此版明細',async()=>{detail.textContent=repairSummary(await readSnapshot(job.revision),false)});
+   button(row,'檢視此版明細',async()=>{detail.textContent=repairSummary(await readSnapshot(job.revision),false,true)});
    if(operator){
     button(row,'載入維修（修改後另存版本）',async()=>{
      const latest=check(await context.client.from('yj_repair_jobs').select('*').eq('case_id',job.case_id).single());
@@ -75,7 +75,7 @@ export function initRepairTeam(bridge){
     });
     button(row,'查看歷史版本（唯讀）',async()=>{
      const versions=check(await context.client.from('yj_repair_versions').select('revision,snapshot,created_at').eq('case_id',job.case_id).order('revision',{ascending:false}).limit(100));
-     detail.replaceChildren(...versions.map(v=>{const d=node('details',undefined,'border p-3 rounded-lg my-2');d.append(node('summary',`第 ${v.revision} 版 · ${new Date(v.created_at).toLocaleString('zh-TW',{timeZone:'Asia/Taipei'})}`),node('p',repairSummary(v.snapshot,false),'whitespace-pre-wrap mt-2'));return d}));
+     detail.replaceChildren(...versions.map(v=>{const d=node('details',undefined,'border p-3 rounded-lg my-2');d.append(node('summary',`第 ${v.revision} 版 · ${new Date(v.created_at).toLocaleString('zh-TW',{timeZone:'Asia/Taipei'})}`),node('p',repairSummary(v.snapshot,false,true),'whitespace-pre-wrap mt-2'));return d}));
     });
    }
    if(manager&&job.workflow==='REVIEW'){
@@ -101,6 +101,7 @@ export function initRepairTeam(bridge){
   onContext:async value=>{if(context?.org!==value.org){jobs=[];link=null;selectedRevision=0;formValues.clear();box.replaceChildren()}context=value;if(value.user){bridge.onAuthenticated();await refreshRepairs()}else{jobs=[];link=null;selectedRevision=0;formValues.clear();box.replaceChildren()}}
  });
 }
-export function repairSummary(s,official=false){
+export function repairSummary(s,official=false,internal=false){
+ if(!internal)return customerRepairSummary(s,official);
  return `永捷維修${official?'正式報價':'估價草稿（未代表核准）'}\n單號：${s.orderId}／第 ${s.revision} 版\n共用案件：${s.caseId}\n檢測版本：${s.sourceRevision}\n客戶：${s.customer || '未填'}\n設備：${s.category}／${s.model}\n處理項目：${s.issue}\n零件／設備：${amountText(s.partsMin,s.partsMax)}\n額外費用：${amountText(s.extra)}（${s.draft.note.customPartName || '無'}）\n工資：${amountText(s.labor)}\n交機加價：${amountText(s.handover)}\n本次收送：${amountText(s.shipping)}\n折扣：-${amountText(s.discount)}\n報價調整：${adjustmentText(s.adjustmentMin,s.adjustmentMax)}（${s.draft.note.adjustmentReason || '無'}）\n維修小計：${amountText(s.repairMin,s.repairMax)}\n原檢測報價（含原收送）：${amountText(s.inspectionTotal)}\n檢測折抵：-${amountText(s.inspectionCredit)}\n重疊收送扣除：-${amountText(s.transportOverlap)}\n案件合計：${amountText(s.totalMin,s.totalMax)}\n原檢測紀錄已收金額參考：${amountText(s.paidReference)}\n預估待收：${amountText(s.remainingMin,s.remainingMax)}\n已收金額請核對公司收款紀錄；此系統不會執行扣款。${official?'\n主管核准時間：'+new Date(s.approvedAt).toLocaleString('zh-TW',{timeZone:'Asia/Taipei'}):''}`;
 }

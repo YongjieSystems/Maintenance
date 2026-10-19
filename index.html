@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>維修費估價程式v2.3.0 | 專業維修估價系統</title>
+    <title>維修費估價程式v2.3.1 | 專業維修估價系統</title>
     
     <!-- Error Handling Script (Must be first) -->
     <script>
@@ -88,7 +88,8 @@
       }
     }
     </script>
-<link rel="stylesheet" href="./interface.css?v=2.3.0">
+<link rel="stylesheet" href="./interface.css?v=2.3.1">
+<style>#customer-print-only{display:none}@media print{body>*{display:none!important}#customer-print-only{display:block!important;padding:20px}#customer-print-only pre{font:16px/1.8 "Microsoft JhengHei",sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}}</style>
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased h-screen overflow-hidden">
     <div id="root" class="h-full"></div>
@@ -164,8 +165,8 @@
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import ReactDOM from 'react-dom/client';
         import { openTraining } from './training.js?v=2.3.0';
-        import { initRepairTeam, openRepairTeam, resetRepairLink } from './repair-team.js?v=2.2.0';
-        import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue } from './repair-core.js';
+        import { initRepairTeam, openRepairTeam, resetRepairLink } from './repair-team.js?v=2.3.1';
+        import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue, customerRepairSummary } from './repair-core.js?v=2.3.1';
         import { 
           Monitor, Laptop, Printer, Droplet, HardDrive, Cpu, 
           Wrench, ChevronRight, AlertCircle, Clock, Save, 
@@ -1698,7 +1699,7 @@
           };
 
           const handlePrint = () => {
-             const snap = buildSnapshot(); if (snap && addToHistory(snap)) window.print();
+             const snap = buildSnapshot(); if (snap && addToHistory(snap)) { document.getElementById('customer-print-text').textContent=generateClipboardText(snap); window.print(); }
           };
 
           // --- REFACTORED COPY & EXPORT LOGIC ---
@@ -1760,36 +1761,7 @@
               };
           };
 
-          const generateClipboardText = (snap) => {
-              let handoverText = "";
-              if (snap.handoverItems.length > 0) {
-                   handoverText = `2a. 交機項目:\n   ${snap.handoverItems.map(i => `- ${i}`).join('\n   ')}\n`;
-              }
-              const serialText = snap.serialNumber ? `\n   序號: ${snap.serialNumber}` : "";
-              const pageText = snap.pageCount ? `\n   使用張數: ${snap.pageCount}` : "";
-
-              return `
-【本機維修估價草稿（未經團隊核准）】
-單號: ${snap.orderId} / 第 ${snap.revision || 1} 版    日期: ${snap.dateStr}
-狀態: ${snap.status || '舊版估價紀錄'}
-----------------
-客戶: ${snap.customerName || '未填寫'}
-報價人員: ${snap.department} / ${snap.personnel || '未填寫'}
-設備: ${snap.categoryName} / ${snap.modelName}${serialText}${pageText}
-問題: ${snap.issueName}
-----------------
-【費用明細】
-1. ${snap.partsLabel} (預設): ${snap.basePartText}
-   ${snap.activeParts.length > 0 ? `(更換: ${snap.activeParts.join(', ')})` : ''}
-2. ${snap.extraPartsLabel}: ${snap.extraPartsName || '無'} ($${snap.extraPartsCost})
-${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0} hr)
-4. 運費: $${snap.shipping}
-5. 折扣: -${snap.discount}
-6. 報價調整: ${adjustmentText(snap.adjustmentMin || 0, snap.adjustmentMax || 0)}${snap.adjustmentReason ? `（${snap.adjustmentReason}）` : ''}
-----------------
-【總金額】: ${snap.totalText}
-`;
-          };
+          const generateClipboardText = (snap) => customerRepairSummary(snap);
 
           const handleCopySummary = () => {
               const snap = buildSnapshot();
@@ -1811,42 +1783,10 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
           const generateExcelFile = (snap) => {
               const wb = XLSX.utils.book_new();
               
-              const ws_data = [
-                  ["本機維修估價草稿（未經團隊核准）", ""],
-                  ["單號", snap.orderId],
-                  ["版本", snap.revision || 1],
-                  ["狀態", snap.status || "舊版估價紀錄"],
-                  ["日期", snap.dateStr],
-                  ["客戶姓名", snap.customerName || ''],
-                  ["報價部門", snap.department],
-                  ["報價人員", snap.personnel],
-                  [],
-                  ["設備類別", snap.categoryName],
-                  ["設備型號", snap.modelName],
-                  ["填寫序號", snap.serialNumber || ''],
-                  ["使用張數", snap.pageCount || ''],
-                  ["故障描述", snap.issueName],
-                  ["工程師備註", snap.technicianNotes],
-                  [],
-                  ["費用項目", "金額 / 說明"],
-                  ["----------------", "----------------"],
-                  [snap.partsLabel, snap.basePartValue],
-                  ["更換零件明細", snap.activeParts.join(', ')],
-                  [snap.extraPartsLabel, snap.extraPartsCost],
-                  [snap.extraPartsDescLabel, snap.extraPartsName],
-                  ...snap.handoverItems.map(item => ["交機項目", item]),
-                  [snap.laborLabel, snap.laborCost],
-                  ["工時 (hr)", snap.laborHours],
-                  ["運費", snap.shipping],
-                  ["特殊折扣", snap.discount],
-                  ["報價調整", adjustmentText(snap.adjustmentMin || 0, snap.adjustmentMax || 0)],
-                  ["調整原因", snap.adjustmentReason || ""],
-                  [],
-                  ["總金額", snap.totalText]
-              ];
+              const ws_data = generateClipboardText(snap).split('\n').map(line=>[line]);
 
               const ws = XLSX.utils.aoa_to_sheet(ws_data);
-              ws['!cols'] = [{ wch: 20 }, { wch: 40 }];
+              ws['!cols'] = [{ wch: 90 }];
               XLSX.utils.book_append_sheet(wb, ws, "Estimate");
               XLSX.writeFile(wb, `Estimate_${snap.orderId}_${new Date().toISOString().slice(0,10)}.xlsx`);
           }
@@ -1958,7 +1898,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                   </header>
 
                   <div className="case-status no-print" role="status">
-                    <strong>{orderId} / 第 {revision} 版 · v2.3.0</strong>
+                    <strong>{orderId} / 第 {revision} 版 · v2.3.1</strong>
                     <span>此畫面為本機草稿；共用及正式報價請使用「團隊／核准／收送」。</span>
                     {saveMessage && <span>{saveMessage}</span>}
                     {storageError && <p role="alert" className="text-red-700">{storageError}</p>}
@@ -2652,5 +2592,6 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
         root.render(<App />);
     </script>
 
+<section id="customer-print-only"><pre id="customer-print-text"></pre></section>
 </body>
 </html>

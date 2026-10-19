@@ -18,7 +18,7 @@ test('all original preset prices, service options and hourly rate stay unchanged
 });
 function harness(seed={}) {
  const hooks=[], store=new Map(Object.entries(seed)), alerts=[], effects=[], clipboard=[], downloads=[];
- let cursor=0, tree, printed=0, failWrite=false;
+ let cursor=0, tree, printed=0, failWrite=false;const elements=new Map();
  const React={
    createElement:(type,props,...children)=>({type,props:{...props,children:children.flat(Infinity)}}),
    useState(initial){const i=cursor++;if(!(i in hooks))hooks[i]=i===0?true:typeof initial==='function'?initial():initial;return [hooks[i],value=>{hooks[i]=typeof value==='function'?value(hooks[i]):value}];},
@@ -32,8 +32,8 @@ function harness(seed={}) {
    navigator:{clipboard:{writeText:async text=>{clipboard.push(text)}}},
    window:{print:()=>printed++},
    URL:{createObjectURL:blob=>{downloads.push(blob);return 'blob:test'},revokeObjectURL:()=>{}},
-   document:{getElementById:()=>({}),createElement:()=>({click(){}})},
-   exports:{},require:name=>name==='react'?React:name==='react-dom/client'?{createRoot:()=>({render(){}})}:name==='./repair-core.js'?core:name.startsWith('./repair-team.js')?{initRepairTeam(){},resetRepairLink(){},openRepairTeam(){}}:new Proxy({},{get:(_,key)=>String(key)})};
+   document:{getElementById:id=>{if(!elements.has(id))elements.set(id,{});return elements.get(id)},createElement:()=>({click(){}})},
+   exports:{},require:name=>name==='react'?React:name==='react-dom/client'?{createRoot:()=>({render(){}})}:name.startsWith('./repair-core.js')?core:name.startsWith('./repair-team.js')?{initRepairTeam(){},resetRepairLink(){},openRepairTeam(){}}:new Proxy({},{get:(_,key)=>String(key)})};
  vm.runInNewContext(compiled,context);
  const render=()=>{cursor=0;tree=context.AppUnderTest();while(effects.length)effects.shift()();cursor=0;tree=context.AppUnderTest();return tree;};
  const walk=node=>node&&typeof node==='object'?[node,...(node.props?.children||[]).flatMap(walk)]:[];
@@ -44,7 +44,7 @@ function harness(seed={}) {
  const input=(field,value)=>{const node=nodes().find(n=>n.props?.onChange?.toString().includes(field));assert.ok(node,`input ${field}`);node.props.onChange({target:{value}});render();};
  const history=()=>JSON.parse(store.get('yjst_repair_history_v1')||'[]');
  const select=()=>{click('桌上型電腦');click('一般組裝電腦');click('無法開機 (No Power)');};
- render();return {render,nodes,text,find,click,input,history,select,alerts,clipboard,downloads,store,context,get printed(){return printed},set failWrite(v){failWrite=v}};
+ render();return {render,nodes,text,find,click,input,history,select,alerts,clipboard,downloads,store,context,get printText(){return elements.get('customer-print-text')?.textContent},get printed(){return printed},set failWrite(v){failWrite=v}};
 }
 test('quote UI → validation → save → dedupe → revision → load → new case',()=>{
  const h=harness();h.select();assert.match(h.text(h.render()),/800/);
@@ -59,12 +59,12 @@ test('quote UI → validation → save → dedupe → revision → load → new 
  h.click('儲存報價');assert.equal(h.history()[0].revision,3);
  h.click('＋ 新案件');assert.equal(h.nodes().some(n=>n.props?.value==='測試客戶'),false);assert.equal(h.history().length,3);
 });
-test('copy, Excel and print share the saved totals and explicit adjustments',async()=>{
+test('copy, Excel and print share customer totals without internal adjustments',async()=>{
  const h=harness();h.select();h.input('manualTotalMin','100');h.input('adjustmentReason','測試議價');
- h.click('複製摘要');await Promise.resolve();h.render();assert.match(h.clipboard[0],/最低價差額 \$-700/);assert.match(h.clipboard[0],/最高價差額 \$-3,400/);assert.match(h.clipboard[0],/待客戶確認/);
+ h.click('複製摘要');await Promise.resolve();h.render();assert.match(h.clipboard[0],/維修整包費用：\$100/);assert.doesNotMatch(h.clipboard[0],/價差|測試議價|報價人員|共用案件/);assert.match(h.clipboard[0],/草稿/);
  const sheets=[];h.context.XLSX={utils:{book_new:()=>({}),aoa_to_sheet:rows=>{sheets.push(rows);return {}},book_append_sheet(){}},writeFile(){}};
- h.click('Excel');const rows=sheets[0];assert.ok(rows.some(row=>row[0]==='報價調整'&&row[1].includes('-3,400')));assert.equal(h.history().length,1);
- h.click('儲存並列印');assert.equal(h.printed,1);assert.equal(h.history().length,1);
+ h.click('Excel');const rows=sheets[0];assert.ok(rows.some(row=>row[0]==='維修整包費用：$100'));assert.ok(!JSON.stringify(rows).includes('測試議價'));assert.equal(h.history().length,1);
+ h.click('儲存並列印');assert.equal(h.printed,1);assert.equal(h.printText,h.clipboard[0]);assert.equal(h.history().length,1);
  h.input('shippingCost',-1);assert.equal(h.find('儲存並列印').props.disabled,true);
 });
 test('storage failure is visible and prevents print',()=>{
