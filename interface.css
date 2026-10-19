@@ -31,6 +31,31 @@ button:disabled {opacity:.5;cursor:not-allowed;}
 .cost-lines > li {gap:12px;}
 .cost-lines > li > span:last-child {text-align:right;}
 .restore-backup {display:flex;align-items:center;justify-content:center;min-height:44px;}
+.training-dialog {width:min(980px,calc(100% - 24px));max-height:90dvh;max-height:min(90dvh,1000px);padding:0 24px 24px;border:1px solid #cbd5e1;border-radius:20px;background:#f8fafc;color:#1e293b;line-height:1.85;box-shadow:0 24px 80px #0f172a45;overflow:auto;scroll-padding-top:100px;}
+.training-dialog::backdrop {background:#0f172a99;}
+.training-header {position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:16px 0;}
+.training-header h2 {font-size:22px;font-weight:700;line-height:1.5;}
+.training-close {flex-shrink:0;padding:8px 14px;border-radius:10px;background:#1e40af;color:white;}
+.training-intro,.training-results,.training-footer {margin:16px 0;color:#475569;}
+.training-search-label {display:block;font-weight:600;}
+#training-search {display:block;width:100%;border:1px solid #94a3b8;border-radius:10px;padding:10px 12px;margin:8px 0;background:white;}
+.training-nav {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:20px;}
+.training-nav button {min-width:0;text-align:left;padding:10px 12px;border:1px solid #dbeafe;border-radius:10px;background:#eff6ff;color:#1e40af;line-height:1.6;}
+.training-section {padding:16px 20px;margin:12px 0;background:white;border:1px solid #e2e8f0;border-radius:14px;overflow-wrap:anywhere;}
+.training-section summary {font-size:18px;font-weight:700;cursor:pointer;min-height:44px;padding:6px 0;}
+.training-section ol {list-style:decimal;padding-left:24px;margin:12px 0;}
+.training-section li {padding-left:4px;margin:12px 0;}
+.training-notes {margin-top:16px;padding:10px 16px;border-left:4px solid #f59e0b;border-radius:8px;background:#fffbeb;color:#78350f;}
+.training-notes p {margin:8px 0;}
+@media screen and (max-width:600px) {
+ .training-dialog {width:calc(100% - 16px);max-height:94dvh;padding:0 16px 16px;}
+ .training-header {gap:8px;align-items:flex-start;}
+ .training-header h2 {font-size:18px;}
+ .training-close {font-size:14px;padding:8px 10px;}
+ .training-nav {grid-template-columns:1fr;}
+ .training-section {padding:12px;}
+ .training-section summary {font-size:17px;}
+}
 @media screen and (max-width:1100px) {
   html,body,#root,.app-shell {height:auto!important;min-height:100vh;overflow:visible!important;}
   .workspace {display:block!important;overflow:visible!important;}
@@ -59,6 +84,10 @@ button:disabled {opacity:.5;cursor:not-allowed;}
   .fixed > .max-w-4xl {width:100%;}
 }
 @media print {
+  .training-dialog:not([open]) {display:none!important;}
+  body:has(.training-dialog[open]) #root,body:has(.training-dialog[open]) #repair-team-panel {display:none!important;}
+  .training-dialog[open] {position:static;width:100%;max-height:none;overflow:visible;border:0;box-shadow:none;}
+  .training-dialog .training-close,.training-dialog .training-nav,.training-dialog #training-search,.training-dialog .training-search-label {display:none;}
   .app-shell,.workspace,.estimate-pane {display:block!important;height:auto!important;overflow:visible!important;width:100%!important;}
   .estimate-pane > div {overflow:visible!important;height:auto!important;}
   .estimate-pane .bg-white {break-inside:avoid;}

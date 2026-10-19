@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>維修費估價程式v2.2.0 | 專業維修估價系統</title>
+    <title>維修費估價程式v2.3.0 | 專業維修估價系統</title>
     
     <!-- Error Handling Script (Must be first) -->
     <script>
@@ -92,7 +92,7 @@
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased h-screen overflow-hidden">
     <div id="root" class="h-full"></div>
-<div id="repair-team-panel" role="dialog" aria-modal="true" aria-label="團隊作業與維修核准" hidden class="no-print fixed inset-0 z-[80] overflow-y-auto bg-slate-50 p-4 md:p-8"><button id="repair-team-back" class="mb-4 p-3 rounded-xl bg-slate-900 text-white">返回維修估價草稿</button><section id="section-team" class="no-print mb-20 space-y-5">
+<div id="repair-team-panel" role="dialog" aria-modal="true" aria-label="團隊作業與維修核准" hidden class="no-print fixed inset-0 z-[80] overflow-y-auto bg-slate-50 p-4 md:p-8"><button type="button" data-open-training class="mb-4 mr-3 p-3 rounded-xl bg-blue-100 text-blue-900">操作說明／教育訓練</button><button id="repair-team-back" class="mb-4 p-3 rounded-xl bg-slate-900 text-white">返回維修估價草稿</button><section id="section-team" class="no-print mb-20 space-y-5">
             <div class="bg-white rounded-2xl p-6 border space-y-4">
                 <h2 class="text-2xl font-black">團隊作業</h2><p><a href="https://yongjiesystems.github.io/testing/" target="_blank" rel="noopener noreferrer" class="text-blue-700 underline">開啟檢測估價系統</a></p>
                 <p class="text-sm text-slate-600">使用檢測系統的員工帳號。維修報價需明確同步；正式報價須經主管核准及記錄客戶同意。檢測與維修共用案件及收送路線。</p>
@@ -163,6 +163,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import ReactDOM from 'react-dom/client';
+        import { openTraining } from './training.js?v=2.3.0';
         import { initRepairTeam, openRepairTeam, resetRepairLink } from './repair-team.js?v=2.2.0';
         import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue } from './repair-core.js';
         import { 
@@ -1893,7 +1894,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                           <h1 className="text-2xl font-bold text-slate-800">維修費估價程式</h1>
                        </div>
                        
-                       <button type="button" onClick={openRepairTeam} className="w-full p-3 mb-5 bg-primary-600 text-white rounded-xl">使用員工帳號／團隊作業</button><p className="text-sm text-slate-500 mb-4">以下共用密碼僅進入本機草稿；不能取得團隊資料或核准報價。</p><form onSubmit={handleLogin} className="space-y-6">
+                       <button type="button" onClick={openTraining} className="w-full p-3 mb-3 bg-blue-50 text-blue-800 rounded-xl">操作說明／教育訓練</button><button type="button" onClick={openRepairTeam} className="w-full p-3 mb-5 bg-primary-600 text-white rounded-xl">使用員工帳號／團隊作業</button><p className="text-sm text-slate-500 mb-4">以下共用密碼僅進入本機草稿；不能取得團隊資料或核准報價。</p><form onSubmit={handleLogin} className="space-y-6">
                           <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-700 ml-1">存取密碼</label>
                             <input 
@@ -1943,7 +1944,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                         <h1 className="text-lg font-bold text-slate-800 leading-tight">維修費估價程式</h1>
                       </div>
                     </div>
-                    <div className="header-actions flex gap-2"><button onClick={openRepairTeam} className="px-4 py-2 bg-emerald-700 text-white rounded-lg text-sm">團隊／核准／收送</button>
+                    <div className="header-actions flex gap-2"><button type="button" onClick={openTraining} className="px-4 py-2 bg-blue-50 text-blue-800 rounded-lg text-sm">操作說明／教育訓練</button><button onClick={openRepairTeam} className="px-4 py-2 bg-emerald-700 text-white rounded-lg text-sm">團隊／核准／收送</button>
                         <button onClick={handleNewCase} className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium">＋ 新案件</button>
                         <label className="restore-backup px-4 py-2 bg-slate-100 rounded-lg text-sm cursor-pointer">還原案件<input aria-label="還原案件備份" type="file" accept=".json,application/json" onChange={handleRestoreBackup} className="hidden" /></label>
                         <button onClick={handleCaseBackup} className="px-4 py-2 bg-slate-100 rounded-lg text-sm">案件備份</button>
@@ -1957,7 +1958,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                   </header>
 
                   <div className="case-status no-print" role="status">
-                    <strong>{orderId} / 第 {revision} 版 · v2.2.0</strong>
+                    <strong>{orderId} / 第 {revision} 版 · v2.3.0</strong>
                     <span>此畫面為本機草稿；共用及正式報價請使用「團隊／核准／收送」。</span>
                     {saveMessage && <span>{saveMessage}</span>}
                     {storageError && <p role="alert" className="text-red-700">{storageError}</p>}
