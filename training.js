@@ -32,7 +32,7 @@ export const TRAINING_SECTIONS = [
   '逐項檢查預設零件／設備費、額外費用與名稱、工時、每小時計價、運費及折扣，不能只看總額。',
   '核對客戶，填設備序號、使用張數、報價人員及必要備註。',
   '已確認單一維修價格時，在「手動總額」的「最低／單一金額」填金額；最高金額留空就代表單一價格。',
-  '手動總額與原明細不同時，填「報價調整原因」，例如「檢測後確認整包維修價格」。差額會明列為「報價調整」。',
+  '手動總額與原明細不同時，填「報價調整原因」，例如「檢測後確認整包維修價格」。差額保留在內部明細；客戶精簡版改列整包費用，不帶出議價差額或原因。',
   '紅色提示存在時，先修正：費用不能是負數、最高價不能低於最低價、折扣不能超過最低費用小計；金額最多兩位小數。'],notes:[
   '「可能處理」是參考，檢測前不代表一定需要更換該零件。',
   '正式核准前須確認單一維修金額，不能仍使用預估價格區間。',
@@ -62,13 +62,17 @@ export const TRAINING_SECTIONS = [
   '確實取得客戶同意後，按「核准本版維修與折抵」。直接建立、沒有檢測報價的維修案件，使用這個維修核准入口即可。'],notes:[
   '系統不會自動向客戶確認，請如實記錄同意方式及時間。',
   '修改維修費、折抵、折扣、運費或原檢測報價後，須重新同步並核准最新版本，不能沿用舊核准。']},
- {id:'official',title:'9. 正式報價如何交給客戶？',steps:[
-  '在共用維修案件確認最新版本已核准。',
-  '按「複製正式報價」，取得可提供給客戶的文字摘要。',
-  '需要列印時，按「下載正式報價（可列印）」，開啟下載的 HTML 檔，再按「列印報價」。',
-  '按鈕不能使用時，檢查檢測或維修是否產生新版本、是否尚未核准。必要時按「更新團隊資料」。'],notes:[
-  '本機草稿的摘要、Excel 及列印，不代表已經完成團隊主管核准。正式文件請從團隊頁輸出。',
-  '正式輸出會向後端重新核對核准版本。已結案或已回送完成的案件不能再改價，請另建新案。']},
+ {id:'official',title:'9. 客戶精簡版：複製、列印與正式報價',steps:[
+  '先看來源：草稿畫面下方「複製摘要」、「Excel」、「儲存並列印」都輸出客戶精簡草稿，未代表主管核准。',
+  '複製草稿：按「複製摘要」，看到成功提示後貼到 LINE、郵件或文件；交付前核對客戶、設備、費用與金額區間。整包議價只列整包費用，不混列原始明細。',
+  '列印草稿：按「儲存並列印」，在預覽核對內容，再選印表機或「另存為 PDF」。Excel 也是同一份客戶精簡草稿，不能當核准證明。',
+  '正式報價：先同步維修及折抵，主管核對最新單一金額及客戶同意紀錄並核准，再到「共用維修案件與主管核准」按「複製正式報價」。複製後仍需自行貼上交付。',
+  '列印正式版：在同一案件按「下載正式報價（可列印）」，開啟下載的 HTML 檔，再按「列印報價」。需要 PDF 時在列印目的地選「另存為 PDF」。',
+  '正式按鈕不能使用時，先按「更新團隊資料」，檢查最新檢測／維修版本是否已核准。改價、改折抵或改原檢測報價後，須重新同步及核准，不能沿用舊正式版。'],notes:[
+  '客戶版保留約定項目、金額區間、檢測費折抵、重疊收送扣除及已收／待收參考。待收金額仍須核對公司收款紀錄。',
+  '員工部門、內部工時成本、工程師筆記、議價及主管核准原因不會帶出。內部明細仍留存，勿把內部畫面或案件備份交給客戶。',
+  '草稿可以討論需求，不能宣稱是已核准正式報價；同步成功、選單狀態或客戶同意均不能取代主管核准。',
+  '正式輸出會向後端核對最新核准版本；已結案或已回送完成的案件不能再改價，請另建新案。']},
  {id:'routes',title:'10. 安排收送路線（客服／主管）',steps:[
   '先確認案件是收送服務，地址、範圍與約定時段已確認，需要的報價也已核准。收送人員或工程師帳號須先開通。',
   '到「集中排線」，展開「編排路線草稿」。新行程先按「另建空白路線」。',
@@ -117,7 +121,7 @@ function createTraining(){
  }
  function filter(value){const query=value.trim().toLocaleLowerCase('zh-TW');let count=0;for(const {item,details} of sections){const visible=[item.title,...item.steps,...item.notes].join(' ').toLocaleLowerCase('zh-TW').includes(query);details.hidden=!visible;if(query&&visible)details.open=true;if(visible)count++;}results.textContent=query?(count?`找到 ${count} 個相關章節`:'沒有找到相關步驟，請換個關鍵字，或清空搜尋查看全部。'):`共 ${sections.length} 個章節；可點章節名稱或展開下方步驟。`;}
  search.oninput=()=>filter(search.value);filter('');
- dialog.append(header,intro,searchLabel,search,results,nav,content,make('p','版本 v2.3.0｜現有收費不變。正式作業以團隊最新核准版本及公司規定為準。','training-footer'));
+ dialog.append(header,intro,searchLabel,search,results,nav,content,make('p','版本 v2.3.2｜現有收費不變。正式作業以團隊最新核准版本及公司規定為準。','training-footer'));
  dialog.addEventListener('close',()=>{if(returnFocus?.isConnected)returnFocus.focus();});document.body.append(dialog);
 }
 export function openTraining(){if(!dialog)createTraining();returnFocus=document.activeElement;if(!dialog.open)dialog.showModal();dialog.querySelector('.training-close').focus();}
