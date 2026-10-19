@@ -1,0 +1,23 @@
+import {readFile,writeFile} from 'node:fs/promises';
+const setup=JSON.parse(await readFile(new URL('../.repair-test.local',import.meta.url),'utf8'));
+if(!/^[0-9a-f-]{36}$/.test(setup.org)||!/^[0-9a-f]{16}$/.test(setup.nonce))throw Error('Invalid QA cleanup identity');
+const sql=`do $$ declare o uuid:='${setup.org}'; u uuid[]; begin
+ if not exists(select 1 from public.yj_organizations where id=o and name='QA REPAIR TEMP ${setup.nonce}') then raise exception 'QA organization mismatch'; end if;
+ select array_agg(user_id) into u from public.yj_memberships where org_id=o and user_id is not null;
+ if exists(select 1 from auth.users where id=any(u) and email not like '%${setup.nonce}%@example.com') then raise exception 'Non-QA user found'; end if;
+ delete from public.yj_route_stops where route_id in(select id from public.yj_routes where org_id=o);
+ delete from public.yj_routes where org_id=o;
+ delete from public.yj_repair_versions where case_id in(select id from public.yj_cases where org_id=o);
+ delete from public.yj_repair_jobs where org_id=o;
+ delete from public.yj_case_costs where case_id in(select id from public.yj_cases where org_id=o);
+ delete from public.yj_quote_versions where case_id in(select id from public.yj_cases where org_id=o);
+ delete from public.yj_cases where org_id=o;
+ delete from public.yj_audit_events where org_id=o;
+ delete from yj_private.bootstrap_challenges where org_id=o;
+ delete from public.yj_memberships where org_id=o;
+ delete from yj_private.repair_pricebook where org_id=o;
+ delete from public.yj_organizations where id=o;
+ delete from auth.users where id=any(u);
+ end $$;`;
+await writeFile(new URL('../.repair-cleanup.local',import.meta.url),sql);
+console.log('Scoped QA cleanup prepared.');

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>維修費估價程式v2.1.0 | 專業維修估價系統</title>
+    <title>維修費估價程式v2.2.0 | 專業維修估價系統</title>
     
     <!-- Error Handling Script (Must be first) -->
     <script>
@@ -92,11 +92,78 @@
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased h-screen overflow-hidden">
     <div id="root" class="h-full"></div>
+<div id="repair-team-panel" role="dialog" aria-modal="true" aria-label="團隊作業與維修核准" hidden class="no-print fixed inset-0 z-[80] overflow-y-auto bg-slate-50 p-4 md:p-8"><button id="repair-team-back" class="mb-4 p-3 rounded-xl bg-slate-900 text-white">返回維修估價草稿</button><section id="section-team" class="no-print mb-20 space-y-5">
+            <div class="bg-white rounded-2xl p-6 border space-y-4">
+                <h2 class="text-2xl font-black">團隊作業</h2><p><a href="https://yongjiesystems.github.io/testing/" target="_blank" rel="noopener noreferrer" class="text-blue-700 underline">開啟檢測估價系統</a></p>
+                <p class="text-sm text-slate-600">使用檢測系統的員工帳號。維修報價需明確同步；正式報價須經主管核准及記錄客戶同意。檢測與維修共用案件及收送路線。</p>
+                <p id="team-user" class="font-bold">尚未登入</p>
+                <div class="flex flex-wrap gap-3"><button type="button" id="team-refresh" class="p-3 bg-blue-100 rounded-xl">更新團隊資料</button><button type="button" id="team-signout" class="p-3 bg-slate-200 rounded-xl">登出此分頁</button></div>
+                <p id="team-status" role="status" aria-live="polite" class="text-sm text-amber-900">正在檢查登入狀態…</p>
+                <div id="team-login" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <label>登入電子郵件<input id="team-email" type="email" autocomplete="username" class="w-full border rounded-xl p-3"></label>
+                    <label>密碼<input id="team-password" type="password" autocomplete="current-password" class="w-full border rounded-xl p-3"></label>
+                    <button type="button" id="team-login-btn" class="p-3 bg-blue-700 text-white rounded-xl">登入團隊</button>
+                </div>
+                <div id="team-password-setup" hidden class="space-y-3 border p-4 rounded-xl">
+                    <h3 class="font-bold">首次開通：請本人設定密碼</h3>
+                    <p class="text-sm">請使用至少 12 字元的密碼。密碼只送至登入服務，不會存入報價、原始碼或團隊名單；請勿把密碼傳給助理或同事。</p>
+                    <label class="block">新密碼<input id="team-new-password" type="password" minlength="12" autocomplete="new-password" class="w-full border p-3 rounded-xl"></label>
+                    <label class="block">再次輸入密碼<input id="team-confirm-password" type="password" minlength="12" autocomplete="new-password" class="w-full border p-3 rounded-xl"></label>
+                    <button id="team-set-password" type="button" class="p-3 bg-blue-700 text-white rounded-xl">設定我的密碼</button>
+                </div>
+            </div>
+            <div id="repair-cloud" class="space-y-4"></div><div id="team-private" hidden class="space-y-5">
+                <label class="block bg-white p-4 rounded-xl">工作團隊<select id="team-org" class="w-full p-3 border rounded-xl"></select></label>
+                <div id="team-operator" hidden class="bg-white rounded-2xl p-6 border space-y-4">
+                    <h3 class="text-xl font-bold">集中排線</h3>
+                    <p class="text-sm">本區沿用檢測系統的共用案件與排線。維修請使用上方同步及核准按鈕；回送前會檢查最新維修核准。日期時間均為臺北時間。</p>
+                    <button hidden type="button" id="team-upload" class="p-3 bg-emerald-700 text-white rounded-xl">同步目前估價至團隊</button>
+                    <details class="border rounded-xl p-4"><summary class="font-bold cursor-pointer">編排路線草稿</summary>
+                        <p class="text-sm my-3">依行程順序加入站點，開始與結束時間包含該站交接及作業；相鄰站點須預留交通時間。系統檢查時間衝突，不會自動估算交通或最佳路徑。所有日期時間均以臺北時間輸入及顯示。</p>
+                        <p id="team-route-editing" class="font-bold">新路線草稿</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 my-3">
+                            <label>路線名稱<input id="team-route-name" maxlength="120" class="w-full border p-3 rounded-xl"></label>
+                            <label>收送人員<select id="team-route-driver" class="w-full border p-3 rounded-xl"></select></label>
+                            <label>路線開始<input id="team-route-start" type="datetime-local" class="w-full border p-3 rounded-xl"></label>
+                            <label>路線結束<input id="team-route-end" type="datetime-local" class="w-full border p-3 rounded-xl"></label>
+                        </div>
+                        <div id="team-stop-editor" class="space-y-3"></div>
+                        <div class="flex flex-wrap gap-3 mt-3"><button id="team-new-route" type="button" class="p-3 bg-slate-200 rounded-xl">另建空白路線</button><button id="team-add-stop" type="button" class="p-3 bg-blue-100 rounded-xl">加入站點</button><button id="team-save-route" type="button" class="p-3 bg-blue-700 text-white rounded-xl">保存路線草稿</button></div>
+                    </details>
+                </div>
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                    <section class="bg-white rounded-2xl p-6 border space-y-4"><h3 class="text-xl font-bold">共用案件（最近 200 案）</h3><div id="team-case-list" class="space-y-3"></div></section>
+                    <section class="bg-white rounded-2xl p-6 border space-y-4"><h3 class="text-xl font-bold">集中排線／我的任務（最近 100 條）</h3><p class="text-sm">工程師與收送人員只會取得分派給自己的已發布路線。取件、回送分開記錄，依站點順序回報；無法完成請記錄原因。</p><div id="team-route-list" class="space-y-3"></div></section>
+                </div>
+                <div id="team-manager" hidden class="bg-white rounded-2xl p-6 border space-y-5">
+                    <h3 class="text-xl font-bold">主管管理</h3>
+                    <p id="team-selected-case" class="font-bold">請從案件列表選取供主管處理的案件</p>
+                    <label class="block">核准／結案／取消原因<input id="team-case-reason" maxlength="500" class="w-full border p-3 rounded-xl"></label>
+                    <label class="block">技術工程師<select id="team-case-engineer" class="w-full border p-3 rounded-xl"></select></label>
+                    <div class="flex flex-wrap gap-3"><button id="team-approve" type="button" class="p-3 bg-emerald-700 text-white rounded-xl">核准最新報價與減免</button><button id="team-assign" type="button" class="p-3 bg-blue-100 rounded-xl">分派技術工程師</button><button id="team-close-case" type="button" class="p-3 bg-slate-200 rounded-xl">結束此案件</button><button id="team-cancel-case" type="button" class="p-3 bg-slate-200 rounded-xl">取消此案件</button></div>
+                    <details class="border p-4 rounded-xl"><summary class="font-bold cursor-pointer">員工名單與權限</summary>
+                        <p class="text-sm my-3">先登錄名單，再為新帳號產生一次性開通連結，由本人設定密碼。這裡不會寄送電子郵件、不會重設既有帳號；既有帳號恢復需由專案擁有者處理。停用會撤銷後端權限，不能停用最後一位已登入主管。</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label>員工電子郵件<input id="team-employee-email" type="email" class="w-full border p-3 rounded-xl"></label>
+                            <label>員工姓名<input id="team-employee-name" maxlength="100" class="w-full border p-3 rounded-xl"></label>
+                            <label>角色<select id="team-employee-role" class="w-full border p-3 rounded-xl"><option value="STAFF">客服／行政</option><option value="ENGINEER">工程師</option><option value="DRIVER">收送人員</option><option value="MANAGER">主管</option></select></label>
+                            <label><input id="team-employee-active" type="checkbox" checked> 啟用帳號</label>
+                        </div>
+                        <button id="team-save-employee" type="button" class="p-3 bg-blue-700 text-white rounded-xl my-3">保存員工權限</button>
+                        <div id="team-account-link" class="space-y-3"></div><div id="team-employee-list" class="space-y-3"></div>
+                    </details>
+                    <details class="border p-4 rounded-xl"><summary class="font-bold cursor-pointer">最近 30 筆操作紀錄</summary><ul id="team-audit-list" class="mt-3"></ul></details>
+                </div>
+            </div>
+        </section>
+
+        </div>
 
     <!-- Main Application Logic -->
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import ReactDOM from 'react-dom/client';
+        import { initRepairTeam, openRepairTeam, resetRepairLink } from './repair-team.js?v=2.2.0';
         import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue } from './repair-core.js';
         import { 
           Monitor, Laptop, Printer, Droplet, HardDrive, Cpu, 
@@ -1494,6 +1561,7 @@
           const handleNewCase = () => {
               if (selectedIssue && !history.some(item => item.orderId === orderId && item.fingerprint === fingerprint) &&
                   !confirm('目前報價尚未儲存。確定放棄畫面內容，建立新案件？')) return;
+              resetRepairLink();
               setOrderId(createOrderId(history));
               setSelectedCategoryId(null); setSelectedModelId(null); setSelectedIssueId(null);
               setNote(prev => Object.fromEntries(Object.entries(prev).map(([key, value]) => [key,
@@ -1700,7 +1768,7 @@
               const pageText = snap.pageCount ? `\n   使用張數: ${snap.pageCount}` : "";
 
               return `
-【維修估價單】
+【本機維修估價草稿（未經團隊核准）】
 單號: ${snap.orderId} / 第 ${snap.revision || 1} 版    日期: ${snap.dateStr}
 狀態: ${snap.status || '舊版估價紀錄'}
 ----------------
@@ -1743,7 +1811,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
               const wb = XLSX.utils.book_new();
               
               const ws_data = [
-                  ["維修估價單 (Estimate)", ""],
+                  ["本機維修估價草稿（未經團隊核准）", ""],
                   ["單號", snap.orderId],
                   ["版本", snap.revision || 1],
                   ["狀態", snap.status || "舊版估價紀錄"],
@@ -1791,6 +1859,24 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
               generateExcelFile(item);
           };
           
+          const repairBridge = useRef({});
+          repairBridge.current = {
+              getSnapshot: buildSnapshot,
+              onLoad: (draft) => {
+                  if (selectedIssue && !confirm('載入共用案件會取代目前表單，確定繼續？')) return false;
+                  setSelectedCategoryId(draft.categoryId); setSelectedModelId(draft.modelId); setSelectedIssueId(draft.issueId);
+                  setNote({...draft.note, adjustmentReason:draft.note.adjustmentReason || ''}); setHandoverState(draft.handoverState); return true;
+              },
+              onInspection: (record) => {setNote(prev => ({...prev, customerName:record.state.customerName || '',serialNumber:'',technicianNotes:record.problem || ''}));},
+              onAuthenticated: () => setIsAuthenticated(true),
+          };
+          useEffect(() => { initRepairTeam({
+              getSnapshot:()=>repairBridge.current.getSnapshot(),
+              onLoad:draft=>repairBridge.current.onLoad(draft),
+              onInspection:record=>repairBridge.current.onInspection(record),
+              onAuthenticated:()=>repairBridge.current.onAuthenticated(),
+          }); }, []);
+
           // Determine if we should show extra device details
           const showDeviceDetails = ['desktop', 'laptop', 'laser-printer', 'inkjet-printer', 'nas'].includes(selectedCategoryId);
           
@@ -1807,7 +1893,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                           <h1 className="text-2xl font-bold text-slate-800">維修費估價程式</h1>
                        </div>
                        
-                       <form onSubmit={handleLogin} className="space-y-6">
+                       <button type="button" onClick={openRepairTeam} className="w-full p-3 mb-5 bg-primary-600 text-white rounded-xl">使用員工帳號／團隊作業</button><p className="text-sm text-slate-500 mb-4">以下共用密碼僅進入本機草稿；不能取得團隊資料或核准報價。</p><form onSubmit={handleLogin} className="space-y-6">
                           <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-700 ml-1">存取密碼</label>
                             <input 
@@ -1857,7 +1943,7 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                         <h1 className="text-lg font-bold text-slate-800 leading-tight">維修費估價程式</h1>
                       </div>
                     </div>
-                    <div className="header-actions flex gap-2">
+                    <div className="header-actions flex gap-2"><button onClick={openRepairTeam} className="px-4 py-2 bg-emerald-700 text-white rounded-lg text-sm">團隊／核准／收送</button>
                         <button onClick={handleNewCase} className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium">＋ 新案件</button>
                         <label className="restore-backup px-4 py-2 bg-slate-100 rounded-lg text-sm cursor-pointer">還原案件<input aria-label="還原案件備份" type="file" accept=".json,application/json" onChange={handleRestoreBackup} className="hidden" /></label>
                         <button onClick={handleCaseBackup} className="px-4 py-2 bg-slate-100 rounded-lg text-sm">案件備份</button>
@@ -1865,14 +1951,14 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                           <History className="w-4 h-4" /><span>估價紀錄</span>
                         </button>
                         <button onClick={() => setShowAdminModal(true)} className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors">
-                          <Database className="w-4 h-4" /><span>資料庫管理</span>
+                          <Database className="w-4 h-4" /><span>本機價目表</span>
                         </button>
                     </div>
                   </header>
 
                   <div className="case-status no-print" role="status">
-                    <strong>{orderId} / 第 {revision} 版 · v2.1.0</strong>
-                    <span>資料僅保存在此瀏覽器，請定期下載案件備份。</span>
+                    <strong>{orderId} / 第 {revision} 版 · v2.2.0</strong>
+                    <span>此畫面為本機草稿；共用及正式報價請使用「團隊／核准／收送」。</span>
                     {saveMessage && <span>{saveMessage}</span>}
                     {storageError && <p role="alert" className="text-red-700">{storageError}</p>}
                   </div>
@@ -1882,8 +1968,8 @@ ${handoverText}3. ${snap.laborLabel}: $${snap.laborCost} (${snap.laborHours || 0
                         <div className="flex items-center gap-4">
                            <div className="text-4xl">🛠️</div>
                            <div>
-                             <h1 className="text-3xl font-bold text-slate-900">維修估價單</h1>
-                             <p className="text-slate-500 mt-1">維修費估價程式 Service Center</p>
+                             <h1 className="text-3xl font-bold text-slate-900">維修估價草稿</h1>
+                             <p className="text-slate-500 mt-1">本機草稿，未經團隊主管核准；正式報價請由團隊頁輸出</p>
                            </div>
                         </div>
                         <div className="text-right">

@@ -33,7 +33,7 @@ function harness(seed={}) {
    window:{print:()=>printed++},
    URL:{createObjectURL:blob=>{downloads.push(blob);return 'blob:test'},revokeObjectURL:()=>{}},
    document:{getElementById:()=>({}),createElement:()=>({click(){}})},
-   exports:{},require:name=>name==='react'?React:name==='react-dom/client'?{createRoot:()=>({render(){}})}:name==='./repair-core.js'?core:new Proxy({},{get:(_,key)=>String(key)})};
+   exports:{},require:name=>name==='react'?React:name==='react-dom/client'?{createRoot:()=>({render(){}})}:name==='./repair-core.js'?core:name.startsWith('./repair-team.js')?{initRepairTeam(){},resetRepairLink(){},openRepairTeam(){}}:new Proxy({},{get:(_,key)=>String(key)})};
  vm.runInNewContext(compiled,context);
  const render=()=>{cursor=0;tree=context.AppUnderTest();while(effects.length)effects.shift()();cursor=0;tree=context.AppUnderTest();return tree;};
  const walk=node=>node&&typeof node==='object'?[node,...(node.props?.children||[]).flatMap(walk)]:[];

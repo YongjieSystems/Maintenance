@@ -8,7 +8,9 @@ export default defineConfig({
     name: 'repair-calculation-module',
     generateBundle() {
       // The existing HTML uses Babel's browser module loader.
-      this.emitFile({type:'asset', fileName:'repair-core.js', source:readFileSync(new URL('./repair-core.js', import.meta.url))});
+      for (const file of ['repair-core.js','repair-team.js','team-workspace.js','team-config.js','team-core.js','vendor/supabase.js']) {
+        this.emitFile({type:'asset', fileName:file, source:readFileSync(new URL('./'+file, import.meta.url))});
+      }
     },
   }],
 });

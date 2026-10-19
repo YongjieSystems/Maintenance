@@ -1,4 +1,8 @@
 :root {font-family: Inter, "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif; color-scheme: light;}
+[hidden] {display:none!important;}
+#repair-team-panel {line-height:1.7;}
+#repair-team-panel .whitespace-pre-wrap {overflow-wrap:anywhere;}
+#team-upload {display:none!important;}
 body {margin:0; line-height:1.6;}
 button,input,textarea,select {font:inherit;}
 button {min-height:44px; touch-action:manipulation;}
