@@ -75,10 +75,13 @@ export function customerRepairSummary(s, official=false) {
  '單號：'+s.orderId+'／第'+(s.revision||1)+'版',
  ...(s.dateStr?['日期：'+s.dateStr]:[]),
  ...((cloud?s.customer:s.customerName)?['客戶：'+(cloud?s.customer:s.customerName)]:[]),
+ '',
+ '【服務內容】',
  '設備：'+[cloud?s.category:s.categoryName,cloud?s.model:s.modelName].filter(Boolean).join('／'),
  ...((s.issue||s.issueName)?['處理：'+(s.issue||s.issueName)]:[]),
  ...((cloud?note.serialNumber:s.serialNumber)?['序號：'+(cloud?note.serialNumber:s.serialNumber)]:[]),
  '',
+ '【費用明細】',
  ...(adjusted?['維修整包費用：'+(cloud?fmt(s.repairMin,s.repairMax):s.totalText), '已含本案約定項目及服務'+(shipping>0?'（含本次收送）':'')+'。']:[
  ...(hasParts?[(s.partsLabel||'零件／設備')+'：'+parts]:[]),
  ...(extra>0?[(cloud?note.customPartName:s.extraPartsName)||'額外項目'].map(name=>name+'：'+fmt(extra)):[]),
@@ -100,8 +103,11 @@ export function customerRepairSummary(s, official=false) {
  ...(s.deliveryWindow?['收送時段：'+s.deliveryWindow]:[]),
  ]:[]),
  '',
+ '【服務約定】',
  '以上依約定維修範圍估價；新增零件或費用須先取得同意。',
  ...(!cloud?['檢測費折抵及收送依確認案件另列，勿與本單重複計費。']:[]),
+ ...((cloud?s.repairMin!==s.repairMax:s.totalMin!==s.totalMax)?['本單為預估金額區間，確定維修金額請依檢測結果另行確認。']:[]),
+ '稅別、維修保固與交期請依本次約定確認。',
  '金額及服務範圍依雙方確認內容辦理。',
  ].join('\n');
 }

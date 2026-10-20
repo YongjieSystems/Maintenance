@@ -101,3 +101,50 @@ button:disabled {opacity:.5;cursor:not-allowed;}
 .manual-actions a[download] {background:#e2e8f0;color:#1e293b;}
 .manual-actions a:focus-visible {outline:3px solid #60a5fa;outline-offset:3px;}
 @media print {.manual-actions {display:none;}}
+
+/* Shared quotation workspace: readable inputs, quiet surfaces, clear customer output. */
+:root {--quote-ink:#172b47;--quote-muted:#52647d;--quote-line:#dce5ef;--quote-blue:#2459c4;--quote-font:"Microsoft JhengHei","PingFang TC","Noto Sans TC",system-ui,sans-serif;}
+@media screen {
+ body {font-family:var(--quote-font);color:var(--quote-ink);background:#f4f7fb;line-height:1.7;}
+ button,input,select,textarea {font-family:var(--quote-font);}
+ button {letter-spacing:0;font-weight:600;min-height:44px;border-radius:12px;transition:background-color .15s,border-color .15s;}
+ input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea {border-radius:12px;border-color:#ccd8e5;background:#fff;line-height:1.6;box-shadow:none;}
+ input:focus-visible,select:focus-visible,textarea:focus-visible {outline:3px solid #9bc2ff;outline-offset:2px;}
+ h1,h2,h3 {letter-spacing:-.02em;line-height:1.5;}
+ pre {font-family:var(--quote-font);white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.95;tab-size:2;}
+ .customer-preview {margin:16px 0;padding:18px 20px;background:#fff;border:1px solid var(--quote-line);border-radius:16px;color:var(--quote-ink);min-width:0;}
+ .customer-preview summary {cursor:pointer;font-weight:700;font-size:16px;min-height:44px;line-height:1.7;}
+ .customer-preview p {font-size:13px;color:var(--quote-muted);margin:6px 0 14px;}
+ .customer-preview pre {padding:18px;background:#f7f9fc;border:1px solid #e7edf5;border-radius:12px;font-size:15px;max-height:600px;overflow:auto;}
+}
+@media screen and (max-width:600px) {
+ .customer-preview {padding:14px;margin:12px 0;}
+ .customer-preview pre {padding:14px;font-size:14px;max-height:none;}
+}
+
+@media screen {
+ .app-shell {font-family:var(--quote-font)!important;}
+ .app-header {background:white;border-bottom:1px solid var(--quote-line);box-shadow:0 2px 12px #17335405;}
+ .app-header h1 {font-size:22px;}
+ .case-status {background:#edf3fb;font-size:13px;line-height:1.8;}
+ .selection-pane {background:#f8fafd!important;}
+ .selection-pane h2 {font-size:18px;}
+ .selection-pane button {box-shadow:none;line-height:1.65;}
+ .selection-pane .rounded-xl {border-radius:14px;}
+ .estimate-pane {background:#f4f7fb!important;box-shadow:none!important;}
+ .estimate-pane>.overflow-y-auto {padding:24px;}
+ .estimate-pane .bg-white {border-radius:16px;box-shadow:0 3px 16px #17335405;}
+ .estimate-pane label {font-size:14px!important;line-height:1.7;color:#425773;}
+ .estimate-pane input:not([type=checkbox]),.estimate-pane select {padding:10px 12px;min-height:46px;}
+ .estimate-pane .quote-total {font-variant-numeric:tabular-nums;letter-spacing:-.025em;}
+ .estimate-pane .customer-preview {margin:0 20px 16px;flex-shrink:0;max-height:42vh;overflow:auto;}
+ .action-bar {box-shadow:0 -3px 14px #17335408;}
+ .action-bar>.flex {grid-template-columns:repeat(2,minmax(0,1fr));}
+ .action-bar button:last-child {grid-column:auto;background:#2459c4!important;color:white;}
+}
+@media screen and (max-width:1100px) {
+ .estimate-pane .customer-preview {max-height:none;margin:0 16px 16px;overflow:visible;}
+}
+@media screen {
+ .estimate-pane .relative:has(>.absolute) input {padding-left:32px;}
+}

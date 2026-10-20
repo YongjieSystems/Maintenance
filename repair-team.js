@@ -1,5 +1,5 @@
 import {initTeamWorkspace} from './team-workspace.js';
-import {amountText,adjustmentText,customerRepairSummary} from './repair-core.js?v=2.3.4';
+import {amountText,adjustmentText,customerRepairSummary} from './repair-core.js?v=2.4.0';
 import {teamError} from './team-core.js';
 let resetLink=()=>{};
 export const resetRepairLink=()=>resetLink();
