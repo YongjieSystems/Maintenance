@@ -32,7 +32,7 @@ export const TRAINING_SECTIONS = [
   '逐項檢查預設零件／設備費、額外費用與名稱、工時、每小時計價、運費及折扣，不能只看總額。',
   '核對客戶，填設備序號、使用張數、報價人員及必要備註。',
   '已確認單一維修價格時，在「手動總額」的「最低／單一金額」填金額；最高金額留空就代表單一價格。',
-  '手動總額與原明細不同時，填「報價調整原因」，例如「檢測後確認整包維修價格」。差額保留在內部明細；客戶精簡版改列整包費用，不帶出議價差額或原因。',
+  '手動總額與原明細不同時，填「報價調整原因」，例如「檢測後確認整包維修價格」。差額保留在內部明細；客戶版改列整包費用，並附上填寫的報價調整原因，請用適合提供客戶的文字。',
   '紅色提示存在時，先修正：費用不能是負數、最高價不能低於最低價、折扣不能超過最低費用小計；金額最多兩位小數。'],notes:[
   '「可能處理」是參考，檢測前不代表一定需要更換該零件。',
   '正式核准前須確認單一維修金額，不能仍使用預估價格區間。',
@@ -63,15 +63,15 @@ export const TRAINING_SECTIONS = [
   '系統不會自動向客戶確認，請如實記錄同意方式及時間。',
   '修改維修費、折抵、折扣、運費或原檢測報價後，須重新同步並核准最新版本，不能沿用舊核准。']},
  {id:'official',title:'9. 客戶精簡版：複製、列印與正式報價',steps:[
-  '先看來源：草稿畫面下方「複製摘要」、「Excel」、「儲存並列印」都輸出客戶精簡草稿，未代表主管核准。',
-  '複製草稿：按「複製摘要」，看到成功提示後貼到 LINE、郵件或文件；交付前核對客戶、設備、費用與金額區間。整包議價只列整包費用，不混列原始明細。',
-  '列印草稿：按「儲存並列印」，在預覽核對內容，再選印表機或「另存為 PDF」。Excel 也是同一份客戶精簡草稿，不能當核准證明。',
+  '先看來源：報價畫面下方「複製摘要」、「Excel」、「儲存並列印」可直接輸出客戶報價；依公司規定完成口頭確認後即可交付，不必等待線上核准。',
+  '複製報價：按「複製摘要」，看到成功提示後貼到 LINE、郵件或文件；交付前核對客戶、設備、費用與金額區間。整包議價只列整包費用，不混列原始明細。',
+  '列印報價：按「儲存並列印」，在預覽核對內容，再選印表機或「另存為 PDF」。Excel 是同一份客戶報價；系統輸出不代表已取得客戶同意。',
   '正式報價：先同步維修及折抵，主管核對最新單一金額及客戶同意紀錄並核准，再到「共用維修案件與主管核准」按「複製正式報價」。複製後仍需自行貼上交付。',
   '列印正式版：在同一案件按「下載正式報價（可列印）」，開啟下載的 HTML 檔，再按「列印報價」。需要 PDF 時在列印目的地選「另存為 PDF」。',
   '正式按鈕不能使用時，先按「更新團隊資料」，檢查最新檢測／維修版本是否已核准。改價、改折抵或改原檢測報價後，須重新同步及核准，不能沿用舊正式版。'],notes:[
   '客戶版保留約定項目、金額區間、檢測費折抵、重疊收送扣除及已收／待收參考。待收金額仍須核對公司收款紀錄。',
-  '員工部門、內部工時成本、工程師筆記、議價及主管核准原因不會帶出。內部明細仍留存，勿把內部畫面或案件備份交給客戶。',
-  '草稿可以討論需求，不能宣稱是已核准正式報價；同步成功、選單狀態或客戶同意均不能取代主管核准。',
+  '報價調整原因會附在客戶版。員工部門、內部工時成本、工程師筆記及主管核准原因不會帶出。內部明細仍留存，勿把內部畫面或案件備份交給客戶。',
+  '特殊情況可依主管口頭確認結果直接從報價畫面輸出，後續再向主管說明；此操作不會自動建立線上核准紀錄。團隊頁的正式報價入口仍用於已完成線上核准的案件。',
   '正式輸出會向後端核對最新核准版本；已結案或已回送完成的案件不能再改價，請另建新案。']},
  {id:'routes',title:'10. 安排收送路線（客服／主管）',steps:[
   '先確認案件是收送服務，地址、範圍與約定時段已確認，需要的報價也已核准。收送人員或工程師帳號須先開通。',
@@ -111,7 +111,7 @@ function createTraining(){
  const manual=make('div',undefined,'manual-actions');
  const openPdf=make('a','開啟／列印員工手冊 PDF');openPdf.href='./manuals/employee-handbook-2026-10-20.pdf';openPdf.target='_blank';openPdf.rel='noopener noreferrer';
  const downloadPdf=make('a','下載員工手冊 PDF');downloadPdf.href='./manuals/employee-handbook-2026-10-20.pdf';downloadPdf.download='';
- manual.append(make('p','三套程式共用完整手冊｜2026/10/20 更新・22 頁。可下載保存，或開啟後列印需要的頁面。'),openPdf,downloadPdf);
+ manual.append(make('p','三套程式共用完整手冊｜2026/10/20 更新・22 頁。可下載保存，或開啟後列印需要的頁面。維修輸出新規則請以本頁第 9 章為準：可依口頭確認直接交付報價，調整原因會附上。'),openPdf,downloadPdf);
  const searchLabel=make('label','搜尋步驟（例如：新增員工、檢測折抵、回送）','training-search-label');searchLabel.htmlFor='training-search';
  const search=make('input');search.id='training-search';search.type='search';search.placeholder='輸入關鍵字';search.autocomplete='off';
  const results=make('p',undefined,'training-results');results.setAttribute('role','status');results.setAttribute('aria-live','polite');
@@ -125,7 +125,7 @@ function createTraining(){
  }
  function filter(value){const query=value.trim().toLocaleLowerCase('zh-TW');let count=0;for(const {item,details} of sections){const visible=[item.title,...item.steps,...item.notes].join(' ').toLocaleLowerCase('zh-TW').includes(query);details.hidden=!visible;if(query&&visible)details.open=true;if(visible)count++;}results.textContent=query?(count?`找到 ${count} 個相關章節`:'沒有找到相關步驟，請換個關鍵字，或清空搜尋查看全部。'):`共 ${sections.length} 個章節；可點章節名稱或展開下方步驟。`;}
  search.oninput=()=>filter(search.value);filter('');
- dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v2.3.3｜現有收費不變。正式作業以團隊最新核准版本及公司規定為準。','training-footer'));
+ dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v2.3.4｜現有收費不變。正式作業以團隊最新核准版本及公司規定為準。','training-footer'));
  dialog.addEventListener('close',()=>{if(returnFocus?.isConnected)returnFocus.focus();});document.body.append(dialog);
 }
 export function openTraining(){if(!dialog)createTraining();returnFocus=document.activeElement;if(!dialog.open)dialog.showModal();dialog.querySelector('.training-close').focus();}

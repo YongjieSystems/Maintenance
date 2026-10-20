@@ -63,7 +63,7 @@ export function validateIssue(issue) {
   return values.every(n => Number.isFinite(n) && n >= 0 && n <= 100000000) && values[1] >= values[0];
 }
 
-// Customer exports deliberately exclude operational identifiers, cost logic and staff notes.
+// Customer exports exclude operational identifiers and staff notes; adjustment reasons are customer-facing.
 export function customerRepairSummary(s, official=false) {
  const cloud=Object.hasOwn(s,'caseId'),note=s.draft?.note||{},fmt=amountText;
  const adjusted=!!s.adjusted || !!s.adjustmentMin || !!s.adjustmentMax;
@@ -71,7 +71,7 @@ export function customerRepairSummary(s, official=false) {
  const hasParts=cloud?(s.partsMin>0||s.partsMax>0):Number(s.basePartValue)>0||/\d*[1-9]/.test(parts||'');
  const extra=cloud?s.extra:s.extraPartsCost, shipping=cloud?s.shipping:s.shipping;
  return [
- '【永捷維修'+(official?'正式報價':'估價草稿｜待確認')+'】',
+ '【永捷維修'+(official?'正式報價':'報價')+'】',
  '單號：'+s.orderId+'／第'+(s.revision||1)+'版',
  ...(s.dateStr?['日期：'+s.dateStr]:[]),
  ...((cloud?s.customer:s.customerName)?['客戶：'+(cloud?s.customer:s.customerName)]:[]),
@@ -88,6 +88,7 @@ export function customerRepairSummary(s, official=false) {
  ...(s.discount>0?['優惠：−'+fmt(s.discount)]:[]),
  (cloud?'維修小計':'預估合計')+'：'+(cloud?fmt(s.repairMin,s.repairMax):s.totalText),
  ]),
+ ...((s.adjustmentReason || note.adjustmentReason)?.trim()?['報價調整原因：'+(s.adjustmentReason || note.adjustmentReason).trim()]:[]),
  ...((cloud?note.activeParts:s.activeParts)?.length?['約定零件：'+(cloud?note.activeParts:s.activeParts).join('、')]:[]),
  ...(s.handoverItems?.length?['交機項目：'+s.handoverItems.join('、')]:[]),
  ...(cloud?[
@@ -101,6 +102,6 @@ export function customerRepairSummary(s, official=false) {
  '',
  '以上依約定維修範圍估價；新增零件或費用須先取得同意。',
  ...(!cloud?['檢測費折抵及收送依確認案件另列，勿與本單重複計費。']:[]),
- ...(official?[]:['此為草稿，金額及服務內容確認、核准後另提供正式報價。']),
+ '金額及服務範圍依雙方確認內容辦理。',
  ].join('\n');
 }

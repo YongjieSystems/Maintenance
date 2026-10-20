@@ -59,11 +59,11 @@ test('quote UI → validation → save → dedupe → revision → load → new 
  h.click('儲存報價');assert.equal(h.history()[0].revision,3);
  h.click('＋ 新案件');assert.equal(h.nodes().some(n=>n.props?.value==='測試客戶'),false);assert.equal(h.history().length,3);
 });
-test('copy, Excel and print share customer totals without internal adjustments',async()=>{
+test('copy, Excel and print include adjustment reason and allow direct quotation',async()=>{
  const h=harness();h.select();h.input('manualTotalMin','100');h.input('adjustmentReason','測試議價');
- h.click('複製摘要');await Promise.resolve();h.render();assert.match(h.clipboard[0],/維修整包費用：\$100/);assert.doesNotMatch(h.clipboard[0],/價差|測試議價|報價人員|共用案件/);assert.match(h.clipboard[0],/草稿/);
+ h.click('複製摘要');await Promise.resolve();h.render();assert.match(h.clipboard[0],/維修整包費用：\$100/);assert.doesNotMatch(h.clipboard[0],/價差|報價人員|共用案件|核准後另提供|此為草稿/);assert.match(h.clipboard[0],/報價調整原因：測試議價/);assert.match(h.clipboard[0],/【永捷維修報價】/);
  const sheets=[];h.context.XLSX={utils:{book_new:()=>({}),aoa_to_sheet:rows=>{sheets.push(rows);return {}},book_append_sheet(){}},writeFile(){}};
- h.click('Excel');const rows=sheets[0];assert.ok(rows.some(row=>row[0]==='維修整包費用：$100'));assert.ok(!JSON.stringify(rows).includes('測試議價'));assert.equal(h.history().length,1);
+ h.click('Excel');const rows=sheets[0];assert.ok(rows.some(row=>row[0]==='維修整包費用：$100'));assert.ok(JSON.stringify(rows).includes('報價調整原因：測試議價'));assert.equal(h.history().length,1);
  h.click('儲存並列印');assert.equal(h.printed,1);assert.equal(h.printText,h.clipboard[0]);assert.equal(h.history().length,1);
  h.input('shippingCost',-1);assert.equal(h.find('儲存並列印').props.disabled,true);
 });
