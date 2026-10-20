@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>維修費估價程式v2.4.0 | 專業維修估價系統</title>
+    <title>維修費估價程式v2.4.1 | 專業維修估價系統</title>
     
     <!-- Error Handling Script (Must be first) -->
     <script>
@@ -88,7 +88,7 @@
       }
     }
     </script>
-<link rel="stylesheet" href="./interface.css?v=2.4.0">
+<link rel="stylesheet" href="./interface.css?v=2.4.1">
 <style>#customer-print-only{display:none}@media print{body>*{display:none!important}#customer-print-only{display:block!important;padding:20px}#customer-print-only pre{font:16px/1.8 "Microsoft JhengHei",sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}}</style>
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased h-screen overflow-hidden">
@@ -164,9 +164,9 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import ReactDOM from 'react-dom/client';
-        import { openTraining } from './training.js?v=2.4.0';
+        import { openTraining } from './training.js?v=2.4.1';
         import { initRepairTeam, openRepairTeam, resetRepairLink } from './repair-team.js?v=2.3.1';
-        import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue, customerRepairSummary } from './repair-core.js?v=2.4.0';
+        import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue, customerRepairSummary } from './repair-core.js?v=2.4.1';
         import { 
           Monitor, Laptop, Printer, Droplet, HardDrive, Cpu, 
           Wrench, ChevronRight, AlertCircle, Clock, Save, 
@@ -1898,7 +1898,7 @@
                   </header>
 
                   <div className="case-status no-print" role="status">
-                    <strong>{orderId} / 第 {revision} 版 · v2.4.0</strong>
+                    <strong>{orderId} / 第 {revision} 版 · v2.4.1</strong>
                     <span>可依主管口頭確認結果直接複製、匯出或列印報價；共用案件請使用「團隊／核准／收送」。</span>
                     {saveMessage && <span>{saveMessage}</span>}
                     {storageError && <p role="alert" className="text-red-700">{storageError}</p>}

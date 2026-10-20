@@ -62,17 +62,23 @@ export const TRAINING_SECTIONS = [
   '確實取得客戶同意後，按「核准本版維修與折抵」。直接建立、沒有檢測報價的維修案件，使用這個維修核准入口即可。'],notes:[
   '系統不會自動向客戶確認，請如實記錄同意方式及時間。',
   '修改維修費、折抵、折扣、運費或原檢測報價後，須重新同步並核准最新版本，不能沿用舊核准。']},
- {id:'official',title:'9. 客戶精簡版：複製、列印與正式報價',steps:[
-  '先看來源：報價畫面下方「複製摘要」、「Excel」、「儲存並列印」可直接輸出客戶報價；依公司規定完成口頭確認後即可交付，不必等待線上核准。',
-  '複製報價：按「複製摘要」，看到成功提示後貼到 LINE、郵件或文件；交付前核對客戶、設備、費用與金額區間。整包議價只列整包費用，不混列原始明細。',
-  '列印報價：按「儲存並列印」，在預覽核對內容，再選印表機或「另存為 PDF」。Excel 是同一份客戶報價；系統輸出不代表已取得客戶同意。',
-  '正式報價：先同步維修及折抵，主管核對最新單一金額及客戶同意紀錄並核准，再到「共用維修案件與主管核准」按「複製正式報價」。複製後仍需自行貼上交付。',
-  '列印正式版：在同一案件按「下載正式報價（可列印）」，開啟下載的 HTML 檔，再按「列印報價」。需要 PDF 時在列印目的地選「另存為 PDF」。',
-  '正式按鈕不能使用時，先按「更新團隊資料」，檢查最新檢測／維修版本是否已核准。改價、改折抵或改原檢測報價後，須重新同步及核准，不能沿用舊正式版。'],notes:[
-  '客戶版保留約定項目、金額區間、檢測費折抵、重疊收送扣除及已收／待收參考。待收金額仍須核對公司收款紀錄。',
-  '報價調整原因會附在客戶版。員工部門、內部工時成本、工程師筆記及主管核准原因不會帶出。內部明細仍留存，勿把內部畫面或案件備份交給客戶。',
-  '特殊情況可依主管口頭確認結果直接從報價畫面輸出，後續再向主管說明；此操作不會自動建立線上核准紀錄。團隊頁的正式報價入口仍用於已完成線上核准的案件。',
-  '正式輸出會向後端核對最新核准版本；已結案或已回送完成的案件不能再改價，請另建新案。']},
+ {
+ "id": "official",
+ "title": "9. 客戶報價：先預覽，再複製或列印",
+ "steps": [
+  "填好設備、故障問題、客戶、費用與調整原因；先修正紅字。往下展開「客戶報價預覽」：電腦在右側估價區下方，手機往下滑到費用與備註後。",
+  "依序核對「服務內容 → 費用明細 → 服務約定」。故障／處理項目與報價調整原因會帶出；整包議價只列整包費用。",
+  "按「複製摘要」，看到成功提示後貼到LINE、郵件或文件，再核對客戶、設備、金額與調整原因。「Excel」輸出同一份客戶內容。",
+  "按「儲存並列印」，核對瀏覽器列印預覽，再選印表機或「另存為PDF」。沒有儲存成功時先處理，不要當作已保存。",
+  "特殊情況依主管口頭確認後可直接交付本機維修報價，不必等待線上核准；後續再向主管說明。估價區間、稅別、保固、交期及追加費用須先向客戶說明。",
+  "需要團隊已核准正式版：同步維修及折抵，主管核准最新單一金額與客戶同意紀錄，再按「複製正式報價」。",
+  "列印團隊正式版：按「下載正式報價（可列印）」，開啟HTML檔後按「列印報價」；需要電子檔時選另存PDF。改價後要重新同步、核准。"
+ ],
+ "notes": [
+  "預覽、複製、Excel及列印共用客戶摘要。工程師筆記、員工部門、內部工時成本及主管核准理由不會帶出；報價調整原因會帶出，請用適合客戶閱讀的文字。",
+  "本機交付不會自動建立團隊核准紀錄。共用案件、檢測費折抵及收送仍依團隊流程處理；備份檔不能當客戶報價。"
+ ]
+},
  {id:'routes',title:'10. 安排收送路線（客服／主管）',steps:[
   '先確認案件是收送服務，地址、範圍與約定時段已確認，需要的報價也已核准。收送人員或工程師帳號須先開通。',
   '到「集中排線」，展開「編排路線草稿」。新行程先按「另建空白路線」。',
@@ -109,9 +115,9 @@ function createTraining(){
  const close=make('button','返回原畫面','training-close');close.type='button';close.onclick=()=>dialog.close();header.append(title,close);
  const intro=make('p','依照自己的工作找到章節，逐步操作。查看說明不會修改或送出報價，關閉後可回到原表單。','training-intro');
  const manual=make('div',undefined,'manual-actions');
- const openPdf=make('a','開啟／列印員工手冊 PDF');openPdf.href='./manuals/employee-handbook-2026-10-20.pdf';openPdf.target='_blank';openPdf.rel='noopener noreferrer';
- const downloadPdf=make('a','下載員工手冊 PDF');downloadPdf.href='./manuals/employee-handbook-2026-10-20.pdf';downloadPdf.download='';
- manual.append(make('p','三套程式共用完整手冊｜2026/10/20 更新・22 頁。可下載保存，或開啟後列印需要的頁面。維修輸出新規則請以本頁第 9 章為準：可依口頭確認直接交付報價，調整原因會附上。'),openPdf,downloadPdf);
+ const openPdf=make('a','開啟／列印員工手冊 PDF');openPdf.href='./manuals/employee-handbook-2026-10-21.pdf';openPdf.target='_blank';openPdf.rel='noopener noreferrer';
+ const downloadPdf=make('a','下載員工手冊 PDF');downloadPdf.href='./manuals/employee-handbook-2026-10-21.pdf';downloadPdf.download='';
+ manual.append(make('p','三套程式共用完整手冊｜2026/10/21 第2版・22 頁。含新版客戶預覽、複製摘要、列印與另存PDF步驟；可下載保存或選印需要的頁面。'),openPdf,downloadPdf);
  const searchLabel=make('label','搜尋步驟（例如：新增員工、檢測折抵、回送）','training-search-label');searchLabel.htmlFor='training-search';
  const search=make('input');search.id='training-search';search.type='search';search.placeholder='輸入關鍵字';search.autocomplete='off';
  const results=make('p',undefined,'training-results');results.setAttribute('role','status');results.setAttribute('aria-live','polite');
@@ -125,7 +131,7 @@ function createTraining(){
  }
  function filter(value){const query=value.trim().toLocaleLowerCase('zh-TW');let count=0;for(const {item,details} of sections){const visible=[item.title,...item.steps,...item.notes].join(' ').toLocaleLowerCase('zh-TW').includes(query);details.hidden=!visible;if(query&&visible)details.open=true;if(visible)count++;}results.textContent=query?(count?`找到 ${count} 個相關章節`:'沒有找到相關步驟，請換個關鍵字，或清空搜尋查看全部。'):`共 ${sections.length} 個章節；可點章節名稱或展開下方步驟。`;}
  search.oninput=()=>filter(search.value);filter('');
- dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v2.4.0｜現有收費不變。正式作業以團隊最新核准版本及公司規定為準。','training-footer'));
+ dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v2.4.1｜現有收費不變。正式作業以團隊最新核准版本及公司規定為準。','training-footer'));
  dialog.addEventListener('close',()=>{if(returnFocus?.isConnected)returnFocus.focus();});document.body.append(dialog);
 }
 export function openTraining(){if(!dialog)createTraining();returnFocus=document.activeElement;if(!dialog.open)dialog.showModal();dialog.querySelector('.training-close').focus();}
