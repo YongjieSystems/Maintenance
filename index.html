@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>維修費估價程式v2.3.2 | 專業維修估價系統</title>
+    <title>維修費估價程式v2.3.3 | 專業維修估價系統</title>
     
     <!-- Error Handling Script (Must be first) -->
     <script>
@@ -164,7 +164,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import ReactDOM from 'react-dom/client';
-        import { openTraining } from './training.js?v=2.3.2';
+        import { openTraining } from './training.js?v=2.3.3';
         import { initRepairTeam, openRepairTeam, resetRepairLink } from './repair-team.js?v=2.3.1';
         import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue, customerRepairSummary } from './repair-core.js?v=2.3.1';
         import { 
@@ -1898,7 +1898,7 @@
                   </header>
 
                   <div className="case-status no-print" role="status">
-                    <strong>{orderId} / 第 {revision} 版 · v2.3.2</strong>
+                    <strong>{orderId} / 第 {revision} 版 · v2.3.3</strong>
                     <span>此畫面為本機草稿；共用及正式報價請使用「團隊／核准／收送」。</span>
                     {saveMessage && <span>{saveMessage}</span>}
                     {storageError && <p role="alert" className="text-red-700">{storageError}</p>}

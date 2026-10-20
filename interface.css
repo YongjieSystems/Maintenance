@@ -94,3 +94,10 @@ button:disabled {opacity:.5;cursor:not-allowed;}
   .invalid-quote .print-container,.invalid-quote .print-only {display:none!important;}
   .invalid-quote::before {content:'報價資料有誤，請返回系統修正後再列印。';display:block;color:#b91c1c;font-size:24px;}
 }
+
+.manual-actions {display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 24px;}
+.manual-actions p {width:100%;line-height:1.7;color:#526173;}
+.manual-actions a {display:inline-block;padding:12px 16px;border-radius:10px;background:#1e40af;color:#fff;text-decoration:none;font-weight:700;line-height:1.6;}
+.manual-actions a[download] {background:#e2e8f0;color:#1e293b;}
+.manual-actions a:focus-visible {outline:3px solid #60a5fa;outline-offset:3px;}
+@media print {.manual-actions {display:none;}}
