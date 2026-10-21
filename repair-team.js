@@ -1,6 +1,6 @@
-import {initTeamWorkspace} from './team-workspace.js';
-import {amountText,adjustmentText,customerRepairSummary} from './repair-core.js?v=2.4.1';
-import {teamError} from './team-core.js';
+import {initTeamWorkspace} from './team-workspace.js?v=2.5.0';
+import {amountText,adjustmentText,customerRepairSummary} from './repair-core.js?v=2.5.0';
+import {teamError} from './team-core.js?v=2.5.0';
 let resetLink=()=>{};
 export const resetRepairLink=()=>resetLink();
 export function openRepairTeam(){document.getElementById('repair-team-panel').hidden=false;}
@@ -98,7 +98,7 @@ export function initRepairTeam(bridge){
   box.append(list);for(const e of box.querySelectorAll('[data-form-key]'))if(formValues.has(e.dataset.formKey))e.value=formValues.get(e.dataset.formKey);
  }
  initTeamWorkspace({getRecord:()=>{throw Error('請使用維修同步按鈕')},onSaved:()=>{},onOpenRecord:linkInspection,
-  onContext:async value=>{if(context?.org!==value.org){jobs=[];link=null;selectedRevision=0;formValues.clear();box.replaceChildren()}context=value;if(value.user){bridge.onAuthenticated();await refreshRepairs()}else{jobs=[];link=null;selectedRevision=0;formValues.clear();box.replaceChildren()}}
+  onContext:async value=>{if(context?.org!==value.org){jobs=[];link=null;selectedRevision=0;formValues.clear();box.replaceChildren()}context=value;bridge.onAuthenticated(!!value.user && !!value.org && ['MANAGER','STAFF'].includes(value.role));if(value.user && value.org && value.role){await refreshRepairs()}else{jobs=[];link=null;selectedRevision=0;formValues.clear();box.replaceChildren()}}
  });
 }
 export function repairSummary(s,official=false,internal=false){

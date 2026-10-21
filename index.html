@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>維修費估價程式v2.4.1 | 專業維修估價系統</title>
+    <title>維修費估價程式v2.5.0 | 專業維修估價系統</title>
     
     <!-- Error Handling Script (Must be first) -->
     <script>
@@ -105,8 +105,8 @@
                     <label>密碼<input id="team-password" type="password" autocomplete="current-password" class="w-full border rounded-xl p-3"></label>
                     <button type="button" id="team-login-btn" class="p-3 bg-blue-700 text-white rounded-xl">登入團隊</button>
                 </div>
-                <div id="team-password-setup" hidden class="space-y-3 border p-4 rounded-xl">
-                    <h3 class="font-bold">首次開通：請本人設定密碼</h3>
+                <div class="flex flex-wrap gap-3"><button id="team-forgot-password" type="button" class="p-3 rounded-xl bg-blue-50 text-blue-800">忘記密碼／寄送重設信</button><button id="team-change-password" type="button" class="p-3 rounded-xl bg-slate-100">變更我的密碼（登入後）</button></div><p class="text-sm text-slate-600">三套程式使用同一組員工帳號，各網站請分別登入。主管可新增、停用員工及調整角色；重設信只寄到員工信箱，主管看不到密碼。</p><div id="team-password-setup" hidden class="space-y-3 border p-4 rounded-xl">
+                    <h3 class="font-bold">開通／重設：請本人設定密碼</h3>
                     <p class="text-sm">請使用至少 12 字元的密碼。密碼只送至登入服務，不會存入報價、原始碼或團隊名單；請勿把密碼傳給助理或同事。</p>
                     <label class="block">新密碼<input id="team-new-password" type="password" minlength="12" autocomplete="new-password" class="w-full border p-3 rounded-xl"></label>
                     <label class="block">再次輸入密碼<input id="team-confirm-password" type="password" minlength="12" autocomplete="new-password" class="w-full border p-3 rounded-xl"></label>
@@ -164,9 +164,9 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import ReactDOM from 'react-dom/client';
-        import { openTraining } from './training.js?v=2.4.1';
-        import { initRepairTeam, openRepairTeam, resetRepairLink } from './repair-team.js?v=2.3.1';
-        import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue, customerRepairSummary } from './repair-core.js?v=2.4.1';
+        import { openTraining } from './training.js?v=2.5.0';
+        import { initRepairTeam, openRepairTeam, resetRepairLink } from './repair-team.js?v=2.5.0';
+        import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue, customerRepairSummary } from './repair-core.js?v=2.5.0';
         import { 
           Monitor, Laptop, Printer, Droplet, HardDrive, Cpu, 
           Wrench, ChevronRight, AlertCircle, Clock, Save, 
@@ -1333,19 +1333,6 @@
         function App() {
           // --- AUTHENTICATION STATE ---
           const [isAuthenticated, setIsAuthenticated] = useState(false);
-          const [loginPass, setLoginPass] = useState('');
-          const [loginError, setLoginError] = useState(false);
-
-          const handleLogin = (e) => {
-             e.preventDefault();
-             if (loginPass === '1111') {
-                 setIsAuthenticated(true);
-             } else {
-                 setLoginError(true);
-                 setLoginPass('');
-             }
-          };
-
           const [data, setData] = useState(() => {
             let localData = null;
             let localTimestamp = 0;
@@ -1809,13 +1796,13 @@
                   setNote({...draft.note, adjustmentReason:draft.note.adjustmentReason || ''}); setHandoverState(draft.handoverState); return true;
               },
               onInspection: (record) => {setNote(prev => ({...prev, customerName:record.state.customerName || '',serialNumber:'',technicianNotes:record.problem || ''}));},
-              onAuthenticated: () => setIsAuthenticated(true),
+              onAuthenticated: allowed => {setIsAuthenticated(allowed);if(!allowed){const output=document.getElementById('customer-print-text');if(output)output.textContent='';}},
           };
           useEffect(() => { initRepairTeam({
               getSnapshot:()=>repairBridge.current.getSnapshot(),
               onLoad:draft=>repairBridge.current.onLoad(draft),
               onInspection:record=>repairBridge.current.onInspection(record),
-              onAuthenticated:()=>repairBridge.current.onAuthenticated(),
+              onAuthenticated:allowed=>repairBridge.current.onAuthenticated(allowed),
           }); }, []);
 
           // Determine if we should show extra device details
@@ -1834,37 +1821,7 @@
                           <h1 className="text-2xl font-bold text-slate-800">維修費估價程式</h1>
                        </div>
                        
-                       <button type="button" onClick={openTraining} className="w-full p-3 mb-3 bg-blue-50 text-blue-800 rounded-xl">操作說明／教育訓練</button><button type="button" onClick={openRepairTeam} className="w-full p-3 mb-5 bg-primary-600 text-white rounded-xl">使用員工帳號／團隊作業</button><p className="text-sm text-slate-500 mb-4">以下共用密碼僅進入本機草稿；不能取得團隊資料或核准報價。</p><form onSubmit={handleLogin} className="space-y-6">
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-700 ml-1">存取密碼</label>
-                            <input 
-                              type="password" 
-                              autoFocus
-                              value={loginPass}
-                              onChange={(e) => { setLoginPass(e.target.value); setLoginError(false); }}
-                              className={`
-                                w-full px-4 py-3 rounded-xl border outline-none transition-all text-center tracking-widest text-lg
-                                ${loginError 
-                                  ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-4 focus:ring-red-100' 
-                                  : 'border-slate-200 bg-slate-50 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-100'
-                                }
-                              `}
-                              placeholder="請輸入密碼"
-                            />
-                            {loginError && (
-                              <div className="flex items-center gap-1.5 text-red-500 text-sm justify-center animate-bounce">
-                                 <AlertCircle size={14} />
-                                 <span>密碼錯誤</span>
-                              </div>
-                            )}
-                          </div>
-                          <button 
-                            type="submit" 
-                            className="w-full bg-slate-900 hover:bg-primary-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-slate-200 hover:shadow-primary-200 active:scale-95"
-                          >
-                            進入系統
-                          </button>
-                       </form>
+                       <button type="button" onClick={openTraining} className="w-full p-3 mb-3 bg-blue-50 text-blue-800 rounded-xl">操作說明／教育訓練</button><button type="button" onClick={openRepairTeam} className="w-full p-3 mb-5 bg-primary-600 text-white rounded-xl">使用員工帳號／團隊作業</button><p className="text-sm text-slate-600 mb-4">請使用啟用中的主管或客服／行政帳號登入。已取消共用密碼入口；三套估價使用同一組員工帳號。助理依主管口頭確認後，仍可直接複製或列印客戶報價。</p><a href="https://yongjiesystems.github.io/testing/?tab=warranty" className="text-blue-700 underline">公開保固與驅動查詢</a>
                        <div className="mt-8 text-center">
                           <p className="text-xs text-slate-300">Protected System Access</p>
                        </div>
@@ -1898,7 +1855,7 @@
                   </header>
 
                   <div className="case-status no-print" role="status">
-                    <strong>{orderId} / 第 {revision} 版 · v2.4.1</strong>
+                    <strong>{orderId} / 第 {revision} 版 · v2.5.0</strong>
                     <span>可依主管口頭確認結果直接複製、匯出或列印報價；共用案件請使用「團隊／核准／收送」。</span>
                     {saveMessage && <span>{saveMessage}</span>}
                     {storageError && <p role="alert" className="text-red-700">{storageError}</p>}

@@ -1,3 +1,4 @@
+// 員工登入：三套使用同一帳號，各網站分別登入。主管可寄重設信，密碼由本人設定。
 export const TRAINING_SECTIONS = [
  {id:'start',title:'1. 第一次使用：登入與整體流程',steps:[
   '開啟維修程式，按「使用員工帳號／團隊作業」；已在草稿畫面時，按上方「團隊／核准／收送」。',
@@ -5,7 +6,7 @@ export const TRAINING_SECTIONS = [
   '有檢測案件：檢測報價同步 → 連結維修 → 完成維修草稿 → 同步維修 → 主管核准 → 正式報價與收送。',
   '沒有檢測案件：完成維修草稿 → 選服務方式 → 同步成新共用案件 → 主管核准 → 正式報價與收送。'],notes:[
   '本機儲存不等於團隊同步。同事看不到尚未同步的草稿。',
-  '原共用存取密碼只能進入本機草稿，不能取得團隊案件或核准權限。現有價目與每小時 350 元設定不變。']},
+  '已取消共用密碼入口。請先用已啟用的主管或客服／行政帳號登入；助理依主管口頭確認仍可直接複製或列印客戶報價。現有價目與每小時350元設定不變。']},
  {id:'roles',title:'2. 各種角色可以做什麼？',steps:[
   '主管：管理員工、核准報價與折抵、分派工程師、發布或取消路線。',
   '客服／行政：建立及同步報價、查看共用版本、編排路線草稿；不能核准。',
@@ -103,7 +104,7 @@ export const TRAINING_SECTIONS = [
   '路線不能發布：檢查報價核准、人員時間、重複站點及取送順序。看不到任務：確認已發布且分派的是本人。',
   '儲存失敗：保留畫面，先備份並聯絡主管；沒有成功訊息就不要當作已保存。',
   '本機「案件備份」保存已儲存的本機紀錄，不是雲端共用案件備份，也不包含尚未儲存的畫面；請先儲存再備份。換電腦或清除網站資料前先處理本機備份。',
-  '看不到團隊功能：確認登入的是員工帳號，而非只輸入共用存取密碼。忘記密碼：聯絡系統管理者，不要重複新增同一帳號。'],notes:[
+  '看不到估價或團隊功能：確認員工名單已啟用且角色正確。忘記密碼：填電子郵件後按「忘記密碼／寄送重設信」，開啟最新信件由本人設定至少12字元密碼。主管也可在員工名單寄送重設信；不必重複新增帳號。'],notes:[
   '不確定費用或操作時，先保留草稿並詢問主管，不要用其他案件代替。']},
 ];
 
@@ -131,7 +132,7 @@ function createTraining(){
  }
  function filter(value){const query=value.trim().toLocaleLowerCase('zh-TW');let count=0;for(const {item,details} of sections){const visible=[item.title,...item.steps,...item.notes].join(' ').toLocaleLowerCase('zh-TW').includes(query);details.hidden=!visible;if(query&&visible)details.open=true;if(visible)count++;}results.textContent=query?(count?`找到 ${count} 個相關章節`:'沒有找到相關步驟，請換個關鍵字，或清空搜尋查看全部。'):`共 ${sections.length} 個章節；可點章節名稱或展開下方步驟。`;}
  search.oninput=()=>filter(search.value);filter('');
- dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v2.4.1｜現有收費不變。正式作業以團隊最新核准版本及公司規定為準。','training-footer'));
+ dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v2.5.0｜現有收費不變。正式作業以團隊最新核准版本及公司規定為準。','training-footer'));
  dialog.addEventListener('close',()=>{if(returnFocus?.isConnected)returnFocus.focus();});document.body.append(dialog);
 }
 export function openTraining(){if(!dialog)createTraining();returnFocus=document.activeElement;if(!dialog.open)dialog.showModal();dialog.querySelector('.training-close').focus();}

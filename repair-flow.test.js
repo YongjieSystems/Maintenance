@@ -16,12 +16,12 @@ test('all original preset prices, service options and hourly rate stay unchanged
  assert.equal(createHash('sha256').update(block).digest('hex'),'e4abd90035c67f916097d556bd5cbef346dfc536206a3a8c800ac2b4d98061d0');
  assert.match(html,/const LABOR_RATE = 350;/);
 });
-function harness(seed={}) {
+function harness(seed={},authenticated=true) {
  const hooks=[], store=new Map(Object.entries(seed)), alerts=[], effects=[], clipboard=[], downloads=[];
  let cursor=0, tree, printed=0, failWrite=false;const elements=new Map();
  const React={
    createElement:(type,props,...children)=>({type,props:{...props,children:children.flat(Infinity)}}),
-   useState(initial){const i=cursor++;if(!(i in hooks))hooks[i]=i===0?true:typeof initial==='function'?initial():initial;return [hooks[i],value=>{hooks[i]=typeof value==='function'?value(hooks[i]):value}];},
+   useState(initial){const i=cursor++;if(!(i in hooks))hooks[i]=i===0?authenticated:typeof initial==='function'?initial():initial;return [hooks[i],value=>{hooks[i]=typeof value==='function'?value(hooks[i]):value}];},
    useRef(initial){const i=cursor++;return hooks[i]??=( {current:initial} );},
    useMemo(fn){cursor++;return fn();},
    useEffect(fn,deps){const i=cursor++;if(!hooks[i]||deps?.some((d,n)=>d!==hooks[i][n])){hooks[i]=deps;effects.push(fn);}},
@@ -44,8 +44,15 @@ function harness(seed={}) {
  const input=(field,value)=>{const node=nodes().find(n=>n.props?.onChange?.toString().includes(field));assert.ok(node,`input ${field}`);node.props.onChange({target:{value}});render();};
  const history=()=>JSON.parse(store.get('yjst_repair_history_v1')||'[]');
  const select=()=>{click('桌上型電腦');click('一般組裝電腦');click('無法開機 (No Power)');};
- render();return {render,nodes,text,find,click,input,history,select,alerts,clipboard,downloads,store,context,get printText(){return elements.get('customer-print-text')?.textContent},get printed(){return printed},set failWrite(v){failWrite=v}};
+ render();return {render,nodes,text,find,click,input,history,select,alerts,clipboard,downloads,store,context,setAuthentication(v){hooks[0]=v;return render()},get printText(){return elements.get('customer-print-text')?.textContent},get printed(){return printed},set failWrite(v){failWrite=v}};
 }
+
+test('maintenance has no shared password and employee logout removes customer quote controls',()=>{
+ assert.doesNotMatch(html,/loginPass|handleLogin|存取密碼/);
+ const h=harness({},false);assert.match(h.text(h.render()),/使用員工帳號/);assert.equal(h.nodes().some(n=>n.props?.type==='password'),false);
+ h.setAuthentication(true);h.select();assert.ok(h.find('複製摘要'));
+ h.setAuthentication(false);assert.equal(h.nodes().some(n=>n.props?.onClick&&h.text(n).includes('複製摘要')),false);
+});
 test('quote UI → validation → save → dedupe → revision → load → new case',()=>{
  const h=harness();h.select();assert.match(h.text(h.render()),/800/);
  h.input('manualTotalMin','100');assert.equal(h.find('儲存報價').props.disabled,true);
