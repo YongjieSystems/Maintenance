@@ -1,3 +1,4 @@
+// 指定工程師可另外開通助理作業權限，涵蓋三套估價與同團隊共用案件；主管權限不變。
 // 員工登入：三套使用同一帳號，各網站分別登入。主管可寄重設信，密碼由本人設定。
 export const TRAINING_SECTIONS = [
  {id:'start',title:'1. 第一次使用：登入與整體流程',steps:[
@@ -10,7 +11,7 @@ export const TRAINING_SECTIONS = [
  {id:'roles',title:'2. 各種角色可以做什麼？',steps:[
   '主管：管理員工、核准報價與折抵、分派工程師、發布或取消路線。',
   '客服／行政：建立及同步報價、查看共用版本、編排路線草稿；不能核准。',
-  '工程師：查看分派案件及自己的已發布任務，回報交接結果；不能核准。',
+  '工程師：預設查看分派案件；經系統管理者開通助理作業權限後，可使用三套估價及同團隊共用案件，仍可接工程師任務，但不能核准或管理員工。',
   '收送人員：查看自己的已發布路線及交接資訊，回報完成或無法完成；不取得維修金額版本。'],notes:['請使用自己的帳號。看不到功能時，先確認登入帳號與主管設定的角色。']},
  {id:'employees',title:'3. 新增員工、設定權限與停用（主管）',steps:[
   '主管登入團隊，往下找到「主管管理」，展開「員工名單與權限」。',
@@ -132,7 +133,7 @@ function createTraining(){
  }
  function filter(value){const query=value.trim().toLocaleLowerCase('zh-TW');let count=0;for(const {item,details} of sections){const visible=[item.title,...item.steps,...item.notes].join(' ').toLocaleLowerCase('zh-TW').includes(query);details.hidden=!visible;if(query&&visible)details.open=true;if(visible)count++;}results.textContent=query?(count?`找到 ${count} 個相關章節`:'沒有找到相關步驟，請換個關鍵字，或清空搜尋查看全部。'):`共 ${sections.length} 個章節；可點章節名稱或展開下方步驟。`;}
  search.oninput=()=>filter(search.value);filter('');
- dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v2.6.0｜現有收費不變。正式作業以團隊最新核准版本及公司規定為準。','training-footer'));
+ dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v2.7.0｜現有收費不變。正式作業以團隊最新核准版本及公司規定為準。','training-footer'));
  dialog.addEventListener('close',()=>{if(returnFocus?.isConnected)returnFocus.focus();});document.body.append(dialog);
 }
 export function openTraining(){if(!dialog)createTraining();returnFocus=document.activeElement;if(!dialog.open)dialog.showModal();dialog.querySelector('.training-close').focus();}

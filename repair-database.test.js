@@ -22,6 +22,7 @@ before(async()=>{
   await db.query('insert into auth.users values($1,$2,now())',[ids[user],user+'@example.test']);
   if(role)await db.query('insert into public.yj_memberships(org_id,user_id,email,display_name,role) values($1,$2,$3,$4,$5)',[ids.org,ids[user],user+'@example.test',user,role]);
  }
+ await db.exec(await readFile(new URL('./supabase/engineer_staff_access.sql',import.meta.url),'utf8'));
 });
 after(()=>db.close());
 test('database recomputes fees; new direct repair integrates with shared case',async()=>{
@@ -103,4 +104,16 @@ test('deactivated account loses repair access even with existing identity',async
  await as('manager','select public.yj_set_employee($1,$2,$3,$4,false)',[ids.org,'staff@example.test','staff','STAFF']);
  assert.equal((await as('staff','select * from public.yj_repair_jobs')).length,0);
  await assert.rejects(save('staff'),/權限/);
+});
+
+test('opt-in engineer can save and read staff repair quotes but cannot approve or alter membership',async()=>{
+ await db.query('update public.yj_memberships set staff_access=true where user_id=$1',[ids.engineer]);
+ const result=await save('engineer');assert.equal(result.revision,1);
+ assert.ok((await as('engineer','select * from public.yj_repair_versions')).length>0);
+ assert.equal((await as('engineer','select * from public.yj_case_costs')).length,0);
+ await assert.rejects(as('engineer','select public.yj_approve_repair($1,1,1,$2,$3)',[result.case_id,'no','no']),{code:'42501'});
+ await assert.rejects(as('engineer','update public.yj_memberships set role=\'MANAGER\''),{code:'42501'});
+ await assert.rejects(save('driver'),{code:'42501'});
+ await db.query('update public.yj_memberships set active=false where user_id=$1',[ids.engineer]);
+ await assert.rejects(save('engineer'),{code:'42501'});
 });
