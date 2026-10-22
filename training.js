@@ -2,7 +2,7 @@
 export const TRAINING_SECTIONS = [
  {id:'start',title:'1. 第一次使用：登入與整體流程',steps:[
   '開啟維修程式，按「使用員工帳號／團隊作業」；已在草稿畫面時，按上方「團隊／核准／收送」。',
-  '輸入檢測系統已開通的員工電子郵件與密碼，按「登入團隊」，確認顯示的是自己的帳號及角色。不同分頁可能需要再次登入。',
+  '輸入檢測系統已開通的員工電子郵件與密碼，按「登入團隊」，確認顯示的是自己的帳號及角色。登入保存方式可選24小時（預設）、個人專用電腦30天，或共用電腦僅本次登入。期限從登入起算，期間重新開啟可恢復；按登出會清除記住登入。',
   '有檢測案件：檢測報價同步 → 連結維修 → 完成維修草稿 → 同步維修 → 主管核准 → 正式報價與收送。',
   '沒有檢測案件：完成維修草稿 → 選服務方式 → 同步成新共用案件 → 主管核准 → 正式報價與收送。'],notes:[
   '本機儲存不等於團隊同步。同事看不到尚未同步的草稿。',
@@ -132,7 +132,7 @@ function createTraining(){
  }
  function filter(value){const query=value.trim().toLocaleLowerCase('zh-TW');let count=0;for(const {item,details} of sections){const visible=[item.title,...item.steps,...item.notes].join(' ').toLocaleLowerCase('zh-TW').includes(query);details.hidden=!visible;if(query&&visible)details.open=true;if(visible)count++;}results.textContent=query?(count?`找到 ${count} 個相關章節`:'沒有找到相關步驟，請換個關鍵字，或清空搜尋查看全部。'):`共 ${sections.length} 個章節；可點章節名稱或展開下方步驟。`;}
  search.oninput=()=>filter(search.value);filter('');
- dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v2.5.0｜現有收費不變。正式作業以團隊最新核准版本及公司規定為準。','training-footer'));
+ dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v2.6.0｜現有收費不變。正式作業以團隊最新核准版本及公司規定為準。','training-footer'));
  dialog.addEventListener('close',()=>{if(returnFocus?.isConnected)returnFocus.focus();});document.body.append(dialog);
 }
 export function openTraining(){if(!dialog)createTraining();returnFocus=document.activeElement;if(!dialog.open)dialog.showModal();dialog.querySelector('.training-close').focus();}

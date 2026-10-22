@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>維修費估價程式v2.5.0 | 專業維修估價系統</title>
+    <title>維修費估價程式v2.6.0 | 專業維修估價系統</title>
     
     <!-- Error Handling Script (Must be first) -->
     <script>
@@ -98,11 +98,12 @@
                 <h2 class="text-2xl font-black">團隊作業</h2><p><a href="https://yongjiesystems.github.io/testing/" target="_blank" rel="noopener noreferrer" class="text-blue-700 underline">開啟檢測估價系統</a></p>
                 <p class="text-sm text-slate-600">使用檢測系統的員工帳號。維修報價需明確同步；正式報價須經主管核准及記錄客戶同意。檢測與維修共用案件及收送路線。</p>
                 <p id="team-user" class="font-bold">尚未登入</p>
-                <div class="flex flex-wrap gap-3"><button type="button" id="team-refresh" class="p-3 bg-blue-100 rounded-xl">更新團隊資料</button><button type="button" id="team-signout" class="p-3 bg-slate-200 rounded-xl">登出此分頁</button></div>
+                <div class="flex flex-wrap gap-3"><button type="button" id="team-refresh" class="p-3 bg-blue-100 rounded-xl">更新團隊資料</button><button type="button" id="team-signout" class="p-3 bg-slate-200 rounded-xl">登出／清除記住登入</button></div>
                 <p id="team-status" role="status" aria-live="polite" class="text-sm text-amber-900">正在檢查登入狀態…</p>
-                <div id="team-login" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <p id="team-login-retention" class="text-sm text-slate-600" role="status"></p><div id="team-login" class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <label>登入電子郵件<input id="team-email" type="email" autocomplete="username" class="w-full border rounded-xl p-3"></label>
                     <label>密碼<input id="team-password" type="password" autocomplete="current-password" class="w-full border rounded-xl p-3"></label>
+                    <label class="md:col-span-3">登入保存方式<select id="team-login-mode" class="w-full border rounded-xl p-3"></select><span class="block text-sm text-slate-600 mt-2">24 小時／30 天從登入成功起算，關閉網頁後仍可恢復；共用電腦請選僅本次登入。登出會清除記住登入，無痕模式或清除網站資料也會失效。各程式分別保存。共用電腦離開前請按登出；瀏覽器還原分頁可能保留本次登入。</span></label>
                     <button type="button" id="team-login-btn" class="p-3 bg-blue-700 text-white rounded-xl">登入團隊</button>
                 </div>
                 <div class="flex flex-wrap gap-3"><button id="team-forgot-password" type="button" class="p-3 rounded-xl bg-blue-50 text-blue-800">忘記密碼／寄送重設信</button><button id="team-change-password" type="button" class="p-3 rounded-xl bg-slate-100">變更我的密碼（登入後）</button></div><p class="text-sm text-slate-600">三套程式使用同一組員工帳號，各網站請分別登入。主管可新增、停用員工及調整角色；重設信只寄到員工信箱，主管看不到密碼。</p><div id="team-password-setup" hidden class="space-y-3 border p-4 rounded-xl">
@@ -164,9 +165,9 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import ReactDOM from 'react-dom/client';
-        import { openTraining } from './training.js?v=2.5.0';
-        import { initRepairTeam, openRepairTeam, resetRepairLink } from './repair-team.js?v=2.5.0';
-        import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue, customerRepairSummary } from './repair-core.js?v=2.5.0';
+        import { openTraining } from './training.js?v=2.6.0';
+        import { initRepairTeam, openRepairTeam, resetRepairLink } from './repair-team.js?v=2.6.0';
+        import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue, customerRepairSummary } from './repair-core.js?v=2.6.0';
         import { 
           Monitor, Laptop, Printer, Droplet, HardDrive, Cpu, 
           Wrench, ChevronRight, AlertCircle, Clock, Save, 
@@ -1855,7 +1856,7 @@
                   </header>
 
                   <div className="case-status no-print" role="status">
-                    <strong>{orderId} / 第 {revision} 版 · v2.5.0</strong>
+                    <strong>{orderId} / 第 {revision} 版 · v2.6.0</strong>
                     <span>可依主管口頭確認結果直接複製、匯出或列印報價；共用案件請使用「團隊／核准／收送」。</span>
                     {saveMessage && <span>{saveMessage}</span>}
                     {storageError && <p role="alert" className="text-red-700">{storageError}</p>}
