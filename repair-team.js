@@ -6,7 +6,7 @@ export const resetRepairLink=()=>resetLink();
 export function openRepairTeam(){document.getElementById('repair-team-panel').hidden=false;}
 export function initRepairTeam(bridge){
  const panel=document.getElementById('repair-team-panel'); if(!panel || panel.dataset.ready) return;panel.dataset.ready='true';
- const box=document.getElementById('repair-cloud');let context=null,jobs=[],link=null,selectedRevision=0,busy=false;const formValues=new Map();
+ const box=document.getElementById('repair-cloud');let context=null,jobs=[],link=null,selectedRevision=0,busy=false;const formValues=new Map();let lastRefreshView='';
  const node=(tag,text,cls='')=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;e.className=cls;return e};
  const message=text=>{document.getElementById('team-status').textContent=text};
  const check=r=>{if(r.error)throw r.error;return r.data};
@@ -22,7 +22,10 @@ export function initRepairTeam(bridge){
  async function refreshRepairs(){
   const expectedContext=context;
   if(!context?.org){jobs=[];box.replaceChildren();return}
-  const result=await context.client.from('yj_repair_jobs').select('*').eq('org_id',context.org).order('updated_at',{ascending:false}).limit(200);if(context!==expectedContext)return;jobs=check(result);render();
+  const result=await context.client.from('yj_repair_jobs').select('*').eq('org_id',context.org).order('updated_at',{ascending:false}).limit(200);if(context!==expectedContext)return;jobs=check(result);
+  // Polling must not replace an open native select, focused input or expanded record when nothing changed.
+  const view=JSON.stringify([context.user?.id,context.org,context.role,jobs,context.cases]);
+  if(view!==lastRefreshView || !box.childElementCount){lastRefreshView=view;render();}
  }
  function linkInspection(){message('檢測與維修已獨立，請建立新的維修單，不再帶入檢測資料。')}
  function render(){

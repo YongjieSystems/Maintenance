@@ -211,3 +211,12 @@ button:disabled {opacity:.5;cursor:not-allowed;}
  .workflow-hint {padding:14px 18px;margin:12px 0;border:1px solid #bdd2e9;border-radius:12px;background:#f0f6ff;color:#17304d;font-size:18px;}
 }
 @media print {.workspace-notices,.workflow-hint {display:none!important;}}
+
+/* Use one document scroll at every width: notices must not push a fixed-height workspace off screen. */
+@media screen {
+ html,body,#root,.app-shell {height:auto!important;min-height:100vh;overflow:visible!important;}
+ .workspace {overflow:visible!important;align-items:flex-start;}
+ .selection-pane,.estimate-pane {height:auto!important;overflow:visible!important;}
+ .selection-pane>div,.estimate-pane>div {height:auto!important;overflow:visible!important;}
+ .action-bar {position:static;}
+}
