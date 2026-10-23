@@ -68,10 +68,11 @@ test('quote UI → validation → save → dedupe → revision → load → new 
  h.click('＋ 新案件');assert.equal(h.nodes().some(n=>n.props?.value==='測試客戶'),false);assert.equal(h.history().length,3);
 });
 test('copy, Excel and print include adjustment reason and allow direct quotation',async()=>{
- const h=harness();h.select();h.input('manualTotalMin','100');h.input('adjustmentReason','測試議價');
+ const h=harness();h.select();h.input('manualTotalMin','100');h.input('adjustmentReason','測試議價');h.input('technicianNotes','Customer note');
  h.click('複製摘要');await Promise.resolve();h.render();const preview=h.nodes().find(n=>n.type==='details'&&n.props.className==='customer-preview no-print');assert.equal(h.text(preview.props.children.find(n=>n?.type==='pre')),h.clipboard[0]);assert.match(h.clipboard[0],/維修整包費用：\$100/);assert.doesNotMatch(h.clipboard[0],/價差|報價人員|共用案件|核准後另提供|此為草稿/);assert.match(h.clipboard[0],/報價調整原因：測試議價/);assert.match(h.clipboard[0],/【永捷維修報價】/);assert.match(h.clipboard[0],/【報價聲明】/);assert.match(h.clipboard[0],/不維修仍須支付已約定/);assert.doesNotMatch(h.clipboard[0],/【服務約定】|成本邏輯|油資/);
+ assert.equal(h.clipboard[0].split('Customer note').length-1,1);assert.equal(h.nodes().filter(n=>n.type==='textarea'&&n.props.id==='customer-quote-notes').length,1);
  const sheets=[];h.context.XLSX={utils:{book_new:()=>({}),aoa_to_sheet:rows=>{sheets.push(rows);return {}},book_append_sheet(){}},writeFile(){}};
- h.click('Excel');const rows=sheets[0];assert.ok(rows.some(row=>row[0]==='維修整包費用：$100'));assert.ok(JSON.stringify(rows).includes('報價調整原因：測試議價'));assert.equal(h.history().length,1);
+ h.click('Excel');const rows=sheets[0];assert.ok(JSON.stringify(rows).includes('Customer note'));assert.ok(rows.some(row=>row[0]==='維修整包費用：$100'));assert.ok(JSON.stringify(rows).includes('報價調整原因：測試議價'));assert.equal(h.history().length,1);
  h.click('儲存並列印');assert.equal(h.printed,1);assert.equal(h.printText,h.clipboard[0]);assert.equal(h.history().length,1);
  h.input('shippingCost',-1);assert.equal(h.find('儲存並列印').props.disabled,true);
 });
@@ -129,4 +130,9 @@ test('new catalogue wizard keeps new parent selections from category to model to
  h.input('setModelName','QA型號');await submit();assert.equal(closed,0);assert.match(h.text(h.render()),/儲存故障/);
  const field=(placeholder,value)=>{h.nodes().find(n=>n.props?.placeholder===placeholder).props.onChange({target:{value}});h.render();};field('輸入或選擇故障名稱...','QA故障');field('最低估價','1000');field('最高估價','1000');field('工時','2');assert.match(h.text(h.render()),/基本工時費 NT\$700；選用後預估 NT\$1,000/);field('工時','4');assert.match(h.text(h.render()),/選用後預估 NT\$1,400.*以工時費為下限/);field('工時','2');await submit();assert.equal(closed,1);
  assert.equal(props.categoryData.at(-1).models[0].issues[0].name,'QA故障');
+});
+
+
+test('optional warranty template is printable and shipped independently',()=>{
+ const warranty=fs.readFileSync(new URL('./repair-warranty.html',import.meta.url),'utf8');assert.match(html,/維修保固條款（另印）/);assert.match(warranty,/window.print\(\)/);assert.match(warranty,/repair-service-parts-warranty-2026-10-23.pdf/);assert.match(warranty,/3個月/);assert.match(warranty,/1個月/);assert.match(warranty,/contenteditable/);assert.doesNotMatch(warranty,/localStorage|supabase|fetch\(/);assert.doesNotMatch(html,/Print View Note|無特殊備註/);
 });

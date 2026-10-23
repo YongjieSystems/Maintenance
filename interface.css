@@ -246,3 +246,5 @@ button:disabled {opacity:.5;cursor:not-allowed;}
 }
 
 .catalogue-price-preview {padding:14px 16px;border:1px solid #b4c9e6;border-radius:12px;background:#eff6ff;color:#17304d;font-size:17px;line-height:1.8;overflow-wrap:anywhere;}
+
+.warranty-template-link {display:inline-flex;align-items:center;justify-content:center;min-height:52px;font-size:18px;line-height:1.6;text-decoration:none;}

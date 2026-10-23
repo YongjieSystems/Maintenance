@@ -1,4 +1,4 @@
-import {QUOTE_DECLARATIONS} from './customer-declaration.js?v=3.1.2';
+import {QUOTE_DECLARATIONS} from './customer-declaration.js?v=3.1.3';
 // Shared by the screen, saved quotations and exports. Price-book values stay unchanged.
 export const money = value => Math.round((value + Number.EPSILON) * 100) / 100;
 export const amountText = (min, max = min) => min === max
@@ -64,13 +64,14 @@ export function validateIssue(issue) {
   return values.every(n => Number.isFinite(n) && n >= 0 && n <= 100000000) && values[1] >= values[0];
 }
 
-// Customer exports exclude operational identifiers and staff notes; adjustment reasons are customer-facing.
+// Customer exports exclude operational identifiers; quotation notes and adjustment reasons are customer-facing.
 export function customerRepairSummary(s, official=false) {
  const cloud=Object.hasOwn(s,'caseId'),note=s.draft?.note||{},fmt=amountText;
  const adjusted=!!s.adjusted || !!s.adjustmentMin || !!s.adjustmentMax;
  const parts=cloud?fmt(s.partsMin,s.partsMax):s.basePartText;
  const hasParts=cloud?(s.partsMin>0||s.partsMax>0):Number(s.basePartValue)>0||/\d*[1-9]/.test(parts||'');
  const extra=cloud?s.extra:s.extraPartsCost, shipping=cloud?s.shipping:s.shipping;
+ const remarks=String((cloud?note.technicianNotes:(s.technicianNotes ?? note.technicianNotes)) ?? '').trim();
  return [
  '【永捷維修報價】',
  '單號：'+s.orderId+'／第'+(s.revision||1)+'版',
@@ -81,6 +82,7 @@ export function customerRepairSummary(s, official=false) {
  '設備：'+[cloud?s.category:s.categoryName,cloud?s.model:s.modelName].filter(Boolean).join('／'),
  ...((s.issue||s.issueName)?['處理：'+(s.issue||s.issueName)]:[]),
  ...((cloud?note.serialNumber:s.serialNumber)?['序號：'+(cloud?note.serialNumber:s.serialNumber)]:[]),
+ ...(remarks?['備註：'+remarks]:[]),
  '',
  '【費用明細】',
  ...(adjusted?['維修整包費用：'+(cloud?fmt(s.repairMin,s.repairMax):s.totalText), '已含本案約定項目及服務'+(shipping>0?'（含本次收送）':'')+'。']:[
@@ -103,11 +105,10 @@ export function customerRepairSummary(s, official=false) {
  ...(s.paidReference>0?['原已收紀錄參考：'+fmt(s.paidReference),'預估待收：'+fmt(s.remainingMin,s.remainingMax)+'（實際以收款紀錄核對）']:[]),
  ...(s.deliveryWindow?['收送時段：'+s.deliveryWindow]:[]),
  ]:[]),
+ ...(!cloud || !(s.inspectionTotal>0)?['本單僅列維修及本次約定收送費；檢測費如有發生，依獨立檢測單另計。']:[]),
+ ...((cloud?s.repairMin!==s.repairMax:s.totalMin!==s.totalMax)?['本單為預估金額區間，確定維修金額請依檢測結果另行確認。']:[]),
  '',
  '【報價聲明】',
  ...QUOTE_DECLARATIONS.map((text,index)=>(index+1)+'. '+text),
- ...(!cloud || !(s.inspectionTotal>0)?['本單僅列維修及本次約定收送費；檢測費如有發生，依獨立檢測單另計。']:[]),
- ...((cloud?s.repairMin!==s.repairMax:s.totalMin!==s.totalMax)?['本單為預估金額區間，確定維修金額請依檢測結果另行確認。']:[]),
- '維修保固範圍依本次約定確認。',
  ].join('\n');
 }
