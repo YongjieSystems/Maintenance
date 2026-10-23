@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>維修費估價程式v2.7.0 | 專業維修估價系統</title>
+    <title>維修費估價程式v2.7.1 | 專業維修估價系統</title>
     
     <!-- Error Handling Script (Must be first) -->
     <script>
@@ -165,9 +165,9 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import ReactDOM from 'react-dom/client';
-        import { openTraining } from './training.js?v=2.7.0';
-        import { initRepairTeam, openRepairTeam, resetRepairLink } from './repair-team.js?v=2.7.0';
-        import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue, customerRepairSummary } from './repair-core.js?v=2.7.0';
+        import { openTraining } from './training.js?v=2.7.1';
+        import { initRepairTeam, openRepairTeam, resetRepairLink } from './repair-team.js?v=2.7.1';
+        import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue, customerRepairSummary } from './repair-core.js?v=2.7.1';
         import { 
           Monitor, Laptop, Printer, Droplet, HardDrive, Cpu, 
           Wrench, ChevronRight, AlertCircle, Clock, Save, 
@@ -1856,7 +1856,7 @@
                   </header>
 
                   <div className="case-status no-print" role="status">
-                    <strong>{orderId} / 第 {revision} 版 · v2.7.0</strong>
+                    <strong>{orderId} / 第 {revision} 版 · v2.7.1</strong>
                     <span>可依主管口頭確認結果直接複製、匯出或列印報價；共用案件請使用「團隊／核准／收送」。</span>
                     {saveMessage && <span>{saveMessage}</span>}
                     {storageError && <p role="alert" className="text-red-700">{storageError}</p>}

@@ -1,6 +1,6 @@
-import {initTeamWorkspace} from './team-workspace.js?v=2.7.0';
-import {amountText,adjustmentText,customerRepairSummary} from './repair-core.js?v=2.7.0';
-import {teamError} from './team-core.js?v=2.7.0';
+import {initTeamWorkspace} from './team-workspace.js?v=2.7.1';
+import {amountText,adjustmentText,customerRepairSummary} from './repair-core.js?v=2.7.1';
+import {teamError} from './team-core.js?v=2.7.1';
 let resetLink=()=>{};
 export const resetRepairLink=()=>resetLink();
 export function openRepairTeam(){document.getElementById('repair-team-panel').hidden=false;}

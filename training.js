@@ -11,7 +11,7 @@ export const TRAINING_SECTIONS = [
  {id:'roles',title:'2. 各種角色可以做什麼？',steps:[
   '主管：管理員工、核准報價與折抵、分派工程師、發布或取消路線。',
   '客服／行政：建立及同步報價、查看共用版本、編排路線草稿；不能核准。',
-  '工程師：預設查看分派案件；經系統管理者開通助理作業權限後，可使用三套估價及同團隊共用案件，仍可接工程師任務，但不能核准或管理員工。',
+  'engineer@service5c.com.tw 保留工程師角色，已開通助理同等作業權限：可在檢測、維修、租賃估價，查看同團隊全部共用案件、載入及同步報價、預覽客戶版、複製與列印，也可承接工程師任務。仍限主管：核准或撤回報價與檢測費折抵、管理員工與權限、查看主管私有成本、分派工程師、發布或取消路線及結案。工程師可以編排路線草稿，但不能代主管發布。本說明針對上述指定帳號；其他工程師不會自動取得相同權限，也不能查看其他團隊案件。看到功能未更新時，先重新整理並按「更新團隊資料」，必要時登出再登入。',
   '收送人員：查看自己的已發布路線及交接資訊，回報完成或無法完成；不取得維修金額版本。'],notes:['請使用自己的帳號。看不到功能時，先確認登入帳號與主管設定的角色。']},
  {id:'employees',title:'3. 新增員工、設定權限與停用（主管）',steps:[
   '主管登入團隊，往下找到「主管管理」，展開「員工名單與權限」。',
@@ -117,9 +117,9 @@ function createTraining(){
  const close=make('button','返回原畫面','training-close');close.type='button';close.onclick=()=>dialog.close();header.append(title,close);
  const intro=make('p','依照自己的工作找到章節，逐步操作。查看說明不會修改或送出報價，關閉後可回到原表單。','training-intro');
  const manual=make('div',undefined,'manual-actions');
- const openPdf=make('a','開啟／列印員工手冊 PDF');openPdf.href='./manuals/employee-handbook-2026-10-21.pdf';openPdf.target='_blank';openPdf.rel='noopener noreferrer';
- const downloadPdf=make('a','下載員工手冊 PDF');downloadPdf.href='./manuals/employee-handbook-2026-10-21.pdf';downloadPdf.download='';
- manual.append(make('p','三套程式共用完整手冊｜2026/10/21 第2版・22 頁。含新版客戶預覽、複製摘要、列印與另存PDF步驟；可下載保存或選印需要的頁面。'),openPdf,downloadPdf);
+ const openPdf=make('a','開啟／列印員工手冊 PDF');openPdf.href='./manuals/employee-handbook-2026-10-23.pdf';openPdf.target='_blank';openPdf.rel='noopener noreferrer';
+ const downloadPdf=make('a','下載員工手冊 PDF');downloadPdf.href='./manuals/employee-handbook-2026-10-23.pdf';downloadPdf.download='';
+ manual.append(make('p','三套程式共用完整手冊｜2026/10/23 第3版・22 頁。含新版客戶預覽、複製摘要、列印與另存PDF步驟；可下載保存或選印需要的頁面。'),openPdf,downloadPdf);
  const searchLabel=make('label','搜尋步驟（例如：新增員工、檢測折抵、回送）','training-search-label');searchLabel.htmlFor='training-search';
  const search=make('input');search.id='training-search';search.type='search';search.placeholder='輸入關鍵字';search.autocomplete='off';
  const results=make('p',undefined,'training-results');results.setAttribute('role','status');results.setAttribute('aria-live','polite');
@@ -133,7 +133,7 @@ function createTraining(){
  }
  function filter(value){const query=value.trim().toLocaleLowerCase('zh-TW');let count=0;for(const {item,details} of sections){const visible=[item.title,...item.steps,...item.notes].join(' ').toLocaleLowerCase('zh-TW').includes(query);details.hidden=!visible;if(query&&visible)details.open=true;if(visible)count++;}results.textContent=query?(count?`找到 ${count} 個相關章節`:'沒有找到相關步驟，請換個關鍵字，或清空搜尋查看全部。'):`共 ${sections.length} 個章節；可點章節名稱或展開下方步驟。`;}
  search.oninput=()=>filter(search.value);filter('');
- dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v2.7.0｜現有收費不變。正式作業以團隊最新核准版本及公司規定為準。','training-footer'));
+ dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v2.7.1｜現有收費不變。正式作業以團隊最新核准版本及公司規定為準。','training-footer'));
  dialog.addEventListener('close',()=>{if(returnFocus?.isConnected)returnFocus.focus();});document.body.append(dialog);
 }
 export function openTraining(){if(!dialog)createTraining();returnFocus=document.activeElement;if(!dialog.open)dialog.showModal();dialog.querySelector('.training-close').focus();}
