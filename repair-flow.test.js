@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import Babel from '@babel/standalone';
 import * as core from './repair-core.js';
+import * as catalogueCore from './catalogue-core.js';
 import {createHash} from 'node:crypto';
 
 // Component integration tests use an isolated mock browser and synthetic quotations.
@@ -33,7 +34,7 @@ function harness(seed={},authenticated=true) {
    window:{print:()=>printed++},
    URL:{createObjectURL:blob=>{downloads.push(blob);return 'blob:test'},revokeObjectURL:()=>{}},
    document:{getElementById:id=>{if(!elements.has(id))elements.set(id,{});return elements.get(id)},createElement:()=>({click(){}})},
-   exports:{},require:name=>name==='react'?React:name==='react-dom/client'?{createRoot:()=>({render(){}})}:name.startsWith('./repair-core.js')?core:name.startsWith('./repair-team.js')?{initRepairTeam(){},resetRepairLink(){},openRepairTeam(){}}:new Proxy({},{get:(_,key)=>String(key)})};
+   exports:{},require:name=>name==='react'?React:name==='react-dom/client'?{createRoot:()=>({render(){}})}:name.startsWith('./repair-core.js')?core:name.startsWith('./catalogue-core.js')?catalogueCore:name.startsWith('./repair-team.js')?{initRepairTeam(bridge){if(authenticated)bridge.onCatalogue({catalogue:context.catalogue,revision:1},{org:'qa',role:'MANAGER'});},saveSharedCatalogue:async data=>({catalogue:data,revision:2}),resetRepairLink(){},openRepairTeam(){}}:new Proxy({},{get:(_,key)=>String(key)})};
  vm.runInNewContext(compiled,context);
  const render=()=>{cursor=0;tree=context.AppUnderTest();while(effects.length)effects.shift()();cursor=0;tree=context.AppUnderTest();return tree;};
  const walk=node=>node&&typeof node==='object'?[node,...(node.props?.children||[]).flatMap(walk)]:[];
@@ -44,7 +45,7 @@ function harness(seed={},authenticated=true) {
  const input=(field,value)=>{const node=nodes().find(n=>n.props?.onChange?.toString().includes(field));assert.ok(node,`input ${field}`);node.props.onChange({target:{value}});render();};
  const history=()=>JSON.parse(store.get('yjst_repair_history_v1')||'[]');
  const select=()=>{click('桌上型電腦');click('一般組裝電腦');click('無法開機 (No Power)');};
- render();return {render,nodes,text,find,click,input,history,select,alerts,clipboard,downloads,store,context,setAuthentication(v){hooks[0]=v;return render()},get printText(){return elements.get('customer-print-text')?.textContent},get printed(){return printed},set failWrite(v){failWrite=v}};
+ render();return {render,nodes,text,find,click,input,history,select,alerts,clipboard,downloads,store,context,setAuthentication(v){hooks[0]=v;if(v)hooks[2]={revision:1,role:'MANAGER',org:'qa',ready:true};return render()},get printText(){return elements.get('customer-print-text')?.textContent},get printed(){return printed},set failWrite(v){failWrite=v}};
 }
 
 test('maintenance has no shared password and employee logout removes customer quote controls',()=>{
@@ -103,4 +104,18 @@ test('a stale tab cannot overwrite another saved revision',()=>{
  h.store.set('yjst_repair_history_v1',JSON.stringify([remote,original]));
  h.click('保存本機報價');assert.equal(h.history()[0].totalText,'$300');assert.match(h.text(h.render()),/其他分頁已更新/);
  h.click('保存本機報價');assert.equal(h.history()[0].revision,3);assert.equal(h.history()[1].fingerprint,'other-tab');
+});
+
+
+test('manager add and edit catalogue drive the actual front quotation and clear obsolete issue selection',async()=>{
+ const h=harness();let admin=h.nodes().find(n=>n.type?.name==='AddDataModal');assert.ok(admin);
+ await admin.props.onSave('category',{name:'QA自訂',iconName:'Wrench'});h.render();assert.ok(h.find('QA自訂'));
+ const cat=h.nodes().find(n=>n.type?.name==='AddDataModal').props.categoryData.at(-1);
+ await h.nodes().find(n=>n.type?.name==='AddDataModal').props.onSave('model',{name:'QA型號'},cat.id);h.render();h.click('QA型號');
+ const model=h.nodes().find(n=>n.type?.name==='AddDataModal').props.categoryData.at(-1).models[0];
+ await h.nodes().find(n=>n.type?.name==='AddDataModal').props.onSave('issue',{name:'QA故障',description:'測試',estimatedCostMin:1000,estimatedCostMax:1000,estimatedTimeHours:2,potentialParts:['零件']},model.id);h.render();h.click('QA故障');h.click('保存本機報價');assert.equal(h.history()[0].totalMin,1000);
+ const issue=h.nodes().find(n=>n.type?.name==='AddDataModal').props.categoryData.at(-1).models[0].issues[0];
+ const editor=h.nodes().find(n=>n.type?.name==='EditDataModal');await editor.props.onSave('issue',issue.id,{...issue,estimatedCostMin:1500,estimatedCostMax:1500,estimatedTimeHours:3},model.id);h.render();assert.equal(h.nodes().some(n=>n.props?.onClick&&h.text(n)==='保存本機報價'),false);
+ h.click('QA故障');h.click('保存本機報價');assert.equal(h.history()[0].totalMin,1500);assert.equal(h.history().at(-1).totalMin,1000);
+ await assert.rejects(h.nodes().find(n=>n.type?.name==='AddDataModal').props.onSave('model',{name:'QA型號'},cat.id),/重複/);
 });

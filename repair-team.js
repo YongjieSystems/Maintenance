@@ -1,3 +1,5 @@
+let catalogueContext=null;
+export async function saveSharedCatalogue(catalogue,revision){if(!catalogueContext || catalogueContext.role!=='MANAGER')throw Error('只有主管可修改公司共用價目');const {client,org}=catalogueContext;const r=await client.rpc('yj_save_repair_catalogue',{p_org:org,p_expected:revision,p_catalogue:catalogue});if(r.error)throw r.error;if(catalogueContext?.org!==org)throw Error('團隊已切換，請重新載入價目');return r.data;}
 import {initTeamWorkspace} from './team-workspace.js?v=3.0.0';
 import {amountText,adjustmentText,customerRepairSummary} from './repair-core.js?v=3.0.0';
 import {teamError} from './team-core.js?v=3.0.0';
@@ -84,7 +86,11 @@ export function initRepairTeam(bridge){
   box.append(list);for(const e of box.querySelectorAll('[data-form-key]'))if(formValues.has(e.dataset.formKey))e.value=formValues.get(e.dataset.formKey);
  }
  initTeamWorkspace({kind:'REPAIR',getRecord:()=>{throw Error('請使用維修同步按鈕')},onSaved:()=>{},onOpenRecord:linkInspection,
-  onContext:async value=>{if(context?.org!==value.org){jobs=[];link=null;selectedRevision=0;formValues.clear();box.replaceChildren()}context=value;bridge.onAuthenticated(!!value.user && !!value.org && ['MANAGER','STAFF'].includes(value.role));if(value.user && value.org && value.role){await refreshRepairs()}else{jobs=[];link=null;selectedRevision=0;formValues.clear();box.replaceChildren()}}
+  onContext:async value=>{if(context?.org!==value.org){jobs=[];link=null;selectedRevision=0;formValues.clear();box.replaceChildren()}context=value;catalogueContext=value;
+   if(value.user && value.org && ['MANAGER','STAFF'].includes(value.role)){
+    const book=check(await value.client.rpc('yj_get_repair_catalogue',{p_org:value.org}));if(context!==value)return;
+    bridge.onCatalogue?.(book,{role:value.role,org:value.org});bridge.onAuthenticated(true);await refreshRepairs();
+   }else{bridge.onAuthenticated(false);bridge.onCatalogue?.(null,{role:null,org:null});jobs=[];link=null;selectedRevision=0;formValues.clear();box.replaceChildren()}}
  });
 }
 export function repairSummary(s,official=false,internal=false){
