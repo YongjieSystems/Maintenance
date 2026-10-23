@@ -999,7 +999,7 @@
                     {['category', 'model', 'issue'].map(tab => (
                       <button
                         key={tab}
-                        onClick={() => setActiveTab(tab)}
+                        onClick={() => {setActiveTab(tab);setFormError('');}}
                         className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${
                           activeTab === tab 
                             ? 'bg-white text-primary-600 shadow-sm' 
@@ -1135,6 +1135,7 @@
 
            useEffect(() => {
               if (target && target.data) {
+                 setEditError('');
                  const initData = { ...target.data };
                  if (target.type === 'issue' && Array.isArray(initData.potentialParts)) {
                      initData.potentialPartsStr = initData.potentialParts.join(', ');
@@ -1236,7 +1237,7 @@
 
                         <div className="pt-4 flex justify-end gap-3">
                             <button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium">取消</button>
-                            <button type="submit" className="px-6 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700">儲存變更</button>
+                            <button disabled={editSaving} type="submit" className="px-6 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700">{editSaving?'保存中…':'儲存變更'}</button>
                         </div>
                     </form>
                 </div>

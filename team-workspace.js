@@ -9,7 +9,7 @@ export function initTeamWorkspace({getRecord,onOpenRecord,onSaved,onContext=asyn
     const notices=createNoticeBoard();document.body?.classList.add('simple-workflow');
     const status=text=>{ $('team-status').textContent=text; };
     const labels={REVIEW:'已保存',APPROVED:'已保存（舊核准紀錄）',DONE:'已完成',CANCELLED:'已取消',DRAFT:'草稿',PUBLISHED:'已發布',PENDING:'待處理',FAILED:'未完成'};
-    const events={CASE_SAVED:'報價已同步',CASE_APPROVED:'主管已核准',CASE_ASSIGNED:'工程師已分派',ROUTE_DRAFT_SAVED:'排線草稿已保存',ROUTE_PUBLISHED:'排線已發布',ROUTE_CANCELLED:'排線已取消',STOP_REPORTED:'站點已回報',EMPLOYEE_CHANGED:'員工權限已調整',ACCOUNT_ACTIVATED:'帳號已開通',CASE_CLOSED:'案件已結束'};
+    const events={REPAIR_CATALOGUE_SAVED:'公司維修價目已更新',CASE_SAVED:'報價已同步',CASE_APPROVED:'主管已核准',CASE_ASSIGNED:'工程師已分派',ROUTE_DRAFT_SAVED:'排線草稿已保存',ROUTE_PUBLISHED:'排線已發布',ROUTE_CANCELLED:'排線已取消',STOP_REPORTED:'站點已回報',EMPLOYEE_CHANGED:'員工權限已調整',ACCOUNT_ACTIVATED:'帳號已開通',CASE_CLOSED:'案件已結束'};
     const loginSession=createLoginSession({namespace:'yj-repair-login-v1',local:localStorage,tab:sessionStorage});
     loginSession.migrateLegacy(sessionStorage,'sb-buzcduwjeddaqwsrbwlf-auth-token');
     const client=TEAM_CONFIG.enabled ? createClient(TEAM_CONFIG.url,TEAM_CONFIG.publishableKey,{global:{fetch:teamFetch},db:{retry:false},auth:{persistSession:true,storage:loginSession.storage,storageKey:loginSession.storageKey,autoRefreshToken:true,detectSessionInUrl:false}}) : null;
