@@ -1,3 +1,4 @@
+import {QUOTE_DECLARATIONS} from './customer-declaration.js?v=3.1.2';
 // Shared by the screen, saved quotations and exports. Price-book values stay unchanged.
 export const money = value => Math.round((value + Number.EPSILON) * 100) / 100;
 export const amountText = (min, max = min) => min === max
@@ -103,11 +104,10 @@ export function customerRepairSummary(s, official=false) {
  ...(s.deliveryWindow?['收送時段：'+s.deliveryWindow]:[]),
  ]:[]),
  '',
- '【服務約定】',
- '以上依約定維修範圍估價；新增零件或費用須先取得同意。',
- ...(!cloud?['本單僅列維修及本次約定收送費；檢測費如有發生，依獨立檢測單另計。']:[]),
+ '【報價聲明】',
+ ...QUOTE_DECLARATIONS.map((text,index)=>(index+1)+'. '+text),
+ ...(!cloud || !(s.inspectionTotal>0)?['本單僅列維修及本次約定收送費；檢測費如有發生，依獨立檢測單另計。']:[]),
  ...((cloud?s.repairMin!==s.repairMax:s.totalMin!==s.totalMax)?['本單為預估金額區間，確定維修金額請依檢測結果另行確認。']:[]),
- '稅別、維修保固與交期請依本次約定確認。',
- '金額及服務範圍依雙方確認內容辦理。',
+ '維修保固範圍依本次約定確認。',
  ].join('\n');
 }

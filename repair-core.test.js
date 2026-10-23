@@ -51,3 +51,12 @@ test('customer repair summary preserves ranges, credits and overlap without priv
  const t=customerRepairSummary(s,true);assert.match(t,/\$1,100 ~ \$1,400/);assert.match(t,/檢測費折抵：−\$500/);assert.match(t,/重疊收送扣除：−\$200/);assert.match(t,/預估待收：\$400 ~ \$700/);assert.match(t,/週三回送/);assert.doesNotMatch(t,/PRIVATE|共用案件|檢測版本|核准原因|工時/);
  const adjusted=customerRepairSummary({...s,adjustmentMin:-100,adjustmentMax:-100});assert.match(adjusted,/維修整包費用：\$1,100 ~ \$1,400/);assert.doesNotMatch(adjusted,/價差|核准後另提供|此為草稿/);assert.match(adjusted,/報價調整原因：專案議價/);assert.match(adjusted,/歷史檢測費折抵/);
 });
+
+
+test('local and cloud repair exports share customer declarations and retain necessary conditions',async()=>{
+ const {QUOTE_DECLARATIONS}=await import('./customer-declaration.js');const {customerRepairSummary}=await import('./repair-core.js');
+ const local={orderId:'TEST',revision:1,customerName:'客戶',categoryName:'桌機',modelName:'一般組裝',issueName:'無法開機',basePartText:'$500',basePartValue:500,laborCost:700,shipping:300,discount:0,totalMin:1500,totalMax:1500,totalText:'$1,500',activeParts:[],adjustmentReason:'專案費用',technicianNotes:'PRIVATE_COST'};
+ const cloud={caseId:'private-id',orderId:'TEST',customer:'客戶',category:'桌機',model:'一般組裝',issue:'無法開機',partsMin:500,partsMax:500,labor:700,shipping:300,repairMin:1500,repairMax:1500,totalMin:1500,totalMax:1500,inspectionTotal:0,deliveryWindow:'週三回送',draft:{note:{technicianNotes:'PRIVATE_COST',activeParts:[]}}};
+ for(const record of [local,cloud]){const text=customerRepairSummary(record);const statement=text.slice(text.indexOf('【報價聲明】'));for(const [i,t] of QUOTE_DECLARATIONS.entries())assert.ok(statement.includes((i+1)+'. '+t));assert.match(text,/本單僅列維修及本次約定收送費/);assert.match(text,/含稅價格/);assert.doesNotMatch(text,/PRIVATE_COST|private-id|成本邏輯|油資|【服務約定】|稅別.*確認/);}
+ assert.match(customerRepairSummary(cloud),/週三回送/);
+});

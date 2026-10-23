@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>維修費估價程式v3.1.1 | 專業維修估價系統</title>
+    <title>維修費估價程式v3.1.2 | 專業維修估價系統</title>
     
     <!-- Error Handling Script (Must be first) -->
     <script>
@@ -88,7 +88,7 @@
       }
     }
     </script>
-<link rel="stylesheet" href="./interface.css?v=3.1.1">
+<link rel="stylesheet" href="./interface.css?v=3.1.2">
 <style>#customer-print-only{display:none}@media print{body>*{display:none!important}#customer-print-only{display:block!important;padding:20px}#customer-print-only pre{font:16px/1.8 "Microsoft JhengHei",sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}}</style>
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased h-screen overflow-hidden">
@@ -165,10 +165,10 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import ReactDOM from 'react-dom/client';
-        import { openTraining } from './training.js?v=3.1.1';
-        import { initRepairTeam, openRepairTeam, resetRepairLink, saveSharedCatalogue } from './repair-team.js?v=3.1.1';
-        import { changeCatalogue, validateCatalogue, cataloguePreview } from './catalogue-core.js?v=3.1.1';
-        import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue, customerRepairSummary } from './repair-core.js?v=3.1.1';
+        import { openTraining } from './training.js?v=3.1.2';
+        import { initRepairTeam, openRepairTeam, resetRepairLink, saveSharedCatalogue } from './repair-team.js?v=3.1.2';
+        import { changeCatalogue, validateCatalogue, cataloguePreview } from './catalogue-core.js?v=3.1.2';
+        import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue, customerRepairSummary } from './repair-core.js?v=3.1.2';
         import { 
           Monitor, Laptop, Printer, Droplet, HardDrive, Cpu, 
           Wrench, ChevronRight, AlertCircle, Clock, Save, 
@@ -1819,7 +1819,7 @@
                   </header>
 
                   <div className="case-status no-print" role="status">
-                    <strong>{orderId} / 第 {revision} 版 · v3.1.1</strong>
+                    <strong>{orderId} / 第 {revision} 版 · v3.1.2</strong>
                     <span>經辦人可直接保存、複製或列印報價，不需主管核准；共用案件請使用「團隊紀錄／收送」。</span>
                     <span>公司共用價目 第 {bookState.revision} 版 · {bookState.role==='MANAGER'?'主管可維護':'由主管維護'}</span>
                     {catalogueMessage && <span role="status">{catalogueMessage}</span>}
