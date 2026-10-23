@@ -244,3 +244,5 @@ button:disabled {opacity:.5;cursor:not-allowed;}
  .catalogue-modal h3 {font-size:21px;line-height:1.5;}
  .catalogue-modal label {display:block;}
 }
+
+.catalogue-price-preview {padding:14px 16px;border:1px solid #b4c9e6;border-radius:12px;background:#eff6ff;color:#17304d;font-size:17px;line-height:1.8;overflow-wrap:anywhere;}

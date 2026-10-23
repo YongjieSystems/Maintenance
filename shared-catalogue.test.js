@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
 import {CONFIG} from './supabase/fixtures/inspection-prices.js';
-import {changeCatalogue,validateCatalogue} from './catalogue-core.js';
+import {changeCatalogue,validateCatalogue,cataloguePreview} from './catalogue-core.js';
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
 const db=new PGlite();const ids=Object.fromEntries(['org','other','manager','staff','engineer','driver','disabled','outsider'].map((s,i)=>[s,`00000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`]));
 let original;
@@ -54,4 +54,18 @@ test('deleting a parent removes its children in current catalogue, retains histo
  const b=await get();const next=changeCatalogue(b.catalogue,{action:'delete',type:'category',id:'qa-cat'});const saved=await save('manager',next,b.revision);assert.equal(saved.revision,4);assert.equal(saved.catalogue.some(c=>c.id==='qa-cat'),false);
  await assert.rejects(save('manager',saved.catalogue.filter(c=>c.id!=='new-used-equipment'),4),/交機/);
  assert.equal((await db.query("select count(*)::int n from public.yj_audit_events where event='REPAIR_CATALOGUE_SAVED'")).rows[0].n,3);
+});
+
+
+test('preview explains the existing labor floor without changing normal or free quotes',()=>{
+ assert.match(cataloguePreview(800,3500,2),/基本工時費 NT\$700；選用後預估 NT\$800 ~ \$3,500/);
+ assert.match(cataloguePreview(800,3500,3),/NT\$1,050 ~ \$3,500.*以工時費為下限/);
+ assert.match(cataloguePreview(0,0,0),/基本工時費 NT\$0；選用後預估 NT\$0/);
+});
+test('preview does not show NaN or misleading estimates for blank, inverted or excessive input',()=>{
+ for(const args of [['',1000,2],[1000,800,2],[-1,1000,2],[800,1000,'bad'],[0,100000001,1]]){const text=cataloguePreview(...args);assert.match(text,/請填妥/);assert.doesNotMatch(text,/NaN|Infinity|選用後預估/);}
+ assert.match(cataloguePreview(1000,1000,100000000),/過大/);
+});
+test('preview matches the current fee calculation for all 53 original catalogue entries',()=>{
+ for(const c of original)for(const m of c.models)for(const i of m.issues){const floor=Math.round(i.estimatedTimeHours*350*100)/100;const min=Math.max(i.estimatedCostMin,floor),max=Math.max(i.estimatedCostMax,floor);const text=cataloguePreview(i.estimatedCostMin,i.estimatedCostMax,i.estimatedTimeHours);assert.ok(text.includes('NT$'+min.toLocaleString('zh-TW')),i.name);if(max!==min)assert.ok(text.includes('$'+max.toLocaleString('zh-TW')),i.name);}
 });

@@ -1,4 +1,4 @@
-import {validateIssue} from './repair-core.js';
+import {validateIssue,calculateQuote,amountText} from './repair-core.js';
 const clean=v=>String(v??'').trim();
 export function validateCatalogue(data){
  if(!Array.isArray(data)||!data.length||data.length>200)throw Error('類別須有1至200項');
@@ -17,4 +17,14 @@ export function changeCatalogue(data,{action,type,id,parentId,values}){
  else{const allowed=type==='issue'?['name','description','estimatedCostMin','estimatedCostMax','estimatedTimeHours','potentialParts']:type==='category'?['name','iconName']:['name'];const value=Object.fromEntries(allowed.filter(k=>Object.hasOwn(values,k)).map(k=>[k,values[k]]));value.name=clean(value.name);if(type==='issue'){value.description=clean(value.description);value.potentialParts=[...new Set((value.potentialParts||[]).map(clean).filter(Boolean))];}
  if(action==='add')items.push({...value,id,...(type==='category'?{models:[]}:type==='model'?{issues:[]}:{})});else items[index]={...items[index],...value};}
  return validateCatalogue(copy);
+}
+
+// Preview uses the same calculation as the live quotation; it never changes the pricebook.
+export function cataloguePreview(minimum,maximum,hours){
+ const values=[minimum,maximum,hours];
+ if(values.some(v=>v===null||v===undefined||String(v).trim()==='') || !validateIssue({estimatedCostMin:minimum,estimatedCostMax:maximum,estimatedTimeHours:hours}))return '前台試算：請填妥有效的最低估價、最高估價及工時；最高價不可小於最低價。';
+ const labor=Number(hours)*350;
+ const result=calculateQuote({manualBasePartsCost:'',customPartsCost:0,finalEstimatedTime:Number(hours),manualLaborRate:350,shippingCost:0,specialDiscount:0,manualTotalMin:'',manualTotalMax:'',pageCount:''},Math.max(0,Number(minimum)-labor),Math.max(0,Number(maximum)-labor));
+ if(result.errors.length)return '前台試算：'+result.errors.join(' ');
+ return '前台試算：基本工時費 NT'+amountText(result.labor)+'；選用後預估 NT'+amountText(result.min,result.max)+'（未加額外零件、收送或折扣）。'+(Number(minimum)<labor?'原定最低估價低於基本工時費，依現行規則以工時費為下限。':'已包含基本工時及預估零件。');
 }
