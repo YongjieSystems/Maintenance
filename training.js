@@ -133,7 +133,7 @@ function createTraining(){
  }
  function filter(value){const query=value.trim().toLocaleLowerCase('zh-TW');let count=0;for(const {item,details} of sections){const visible=[item.title,...item.steps,...item.notes].join(' ').toLocaleLowerCase('zh-TW').includes(query);details.hidden=!visible;if(query&&visible)details.open=true;if(visible)count++;}results.textContent=query?(count?`找到 ${count} 個相關章節`:'沒有找到相關步驟，請換個關鍵字，或清空搜尋查看全部。'):`共 ${sections.length} 個章節；可點章節名稱或展開下方步驟。`;}
  search.oninput=()=>filter(search.value);filter('');
- dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v2.7.1｜現有收費不變。正式作業以團隊最新核准版本及公司規定為準。','training-footer'));
+ dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v2.8.0｜現有收費不變。正式作業以團隊最新核准版本及公司規定為準。','training-footer'));
  dialog.addEventListener('close',()=>{if(returnFocus?.isConnected)returnFocus.focus();});document.body.append(dialog);
 }
 export function openTraining(){if(!dialog)createTraining();returnFocus=document.activeElement;if(!dialog.open)dialog.showModal();dialog.querySelector('.training-close').focus();}
