@@ -220,3 +220,19 @@ button:disabled {opacity:.5;cursor:not-allowed;}
  .selection-pane>div,.estimate-pane>div {height:auto!important;overflow:visible!important;}
  .action-bar {position:static;}
 }
+
+/* Match the heading card to the content gutter; keep currency outside the editable amount. */
+@media screen {
+ .estimate-pane>.overflow-y-auto {padding:24px!important;}
+ .estimate-pane>.estimate-heading {margin:24px 24px 0;padding:20px!important;border-radius:18px;}
+ .discount-input-group {display:flex;align-items:stretch;border:1px solid #b78484;border-radius:12px;background:#fff;overflow:hidden;}
+ .discount-currency {display:flex;align-items:center;padding:0 14px;background:#fff1f2;color:#9f2636;font-weight:700;border-right:1px solid #ecd1d5;flex-shrink:0;}
+ .estimate-pane .discount-input-group input.discount-amount {flex:1;min-width:0;width:100%;border:0!important;border-radius:0;padding:12px 14px;min-height:54px;color:#94263a;box-shadow:none;}
+ .discount-input-group:focus-within {outline:3px solid #2459c4;outline-offset:3px;}
+ .estimate-pane .discount-input-group input:focus-visible {outline:none;}
+ .discount-hint {font-size:16px;line-height:1.7;color:#52657c;margin-top:8px;}
+}
+@media screen and (max-width:600px) {
+ .estimate-pane>.overflow-y-auto {padding:16px!important;}
+ .estimate-pane>.estimate-heading {margin:16px 16px 0;padding:16px!important;}
+}

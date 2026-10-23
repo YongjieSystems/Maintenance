@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>維修費估價程式v3.0.1 | 專業維修估價系統</title>
+    <title>維修費估價程式v3.0.2 | 專業維修估價系統</title>
     
     <!-- Error Handling Script (Must be first) -->
     <script>
@@ -88,7 +88,7 @@
       }
     }
     </script>
-<link rel="stylesheet" href="./interface.css?v=3.0.1">
+<link rel="stylesheet" href="./interface.css?v=3.0.2">
 <style>#customer-print-only{display:none}@media print{body>*{display:none!important}#customer-print-only{display:block!important;padding:20px}#customer-print-only pre{font:16px/1.8 "Microsoft JhengHei",sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}}</style>
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased h-screen overflow-hidden">
@@ -165,9 +165,9 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import ReactDOM from 'react-dom/client';
-        import { openTraining } from './training.js?v=3.0.1';
-        import { initRepairTeam, openRepairTeam, resetRepairLink } from './repair-team.js?v=3.0.1';
-        import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue, customerRepairSummary } from './repair-core.js?v=3.0.1';
+        import { openTraining } from './training.js?v=3.0.2';
+        import { initRepairTeam, openRepairTeam, resetRepairLink } from './repair-team.js?v=3.0.2';
+        import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue, customerRepairSummary } from './repair-core.js?v=3.0.2';
         import { 
           Monitor, Laptop, Printer, Droplet, HardDrive, Cpu, 
           Wrench, ChevronRight, AlertCircle, Clock, Save, 
@@ -1856,7 +1856,7 @@
                   </header>
 
                   <div className="case-status no-print" role="status">
-                    <strong>{orderId} / 第 {revision} 版 · v3.0.1</strong>
+                    <strong>{orderId} / 第 {revision} 版 · v3.0.2</strong>
                     <span>經辦人可直接保存、複製或列印報價，不需主管核准；共用案件請使用「團隊紀錄／收送」。</span>
                     {saveMessage && <span>{saveMessage}</span>}
                     {storageError && <p role="alert" className="text-red-700">{storageError}</p>}
@@ -2043,7 +2043,7 @@
                     {/* RIGHT COLUMN: Estimate & Work Area */}
                     <div className="estimate-pane w-5/12 bg-slate-50 border-l border-slate-200 flex flex-col h-full shadow-inner overflow-hidden print-container print:w-full print:border-none print:bg-white print:shadow-none">
                       
-                      <div className="no-print p-6 bg-white border-b border-slate-200 flex-shrink-0">
+                      <div className="estimate-heading no-print p-6 bg-white border border-slate-200 flex-shrink-0">
                          <div className="flex items-center gap-2 mb-2">
                            <Calculator className="w-5 h-5 text-emerald-600" />
                            <h2 className="text-lg font-bold text-slate-800">維修估價單 (Estimate)</h2>
@@ -2356,20 +2356,21 @@
 
                                   {/* Special Discount */}
                                   <div>
-                                      <label className="text-xs font-bold text-red-500 mb-1 flex items-center gap-1">
+                                      <label htmlFor="special-discount" className="text-xs font-bold text-red-500 mb-1 flex items-center gap-1">
                                         <ShieldAlert className="w-3 h-3" />
-                                        特殊折扣（請依公司規定取得主管同意）
+                                        特殊折扣（減免金額）
                                       </label>
-                                      <div className="relative">
-                                          <span className="absolute left-3 top-2 text-red-400">- $</span>
+                                      <div className="discount-input-group">
+                                          <span className="discount-currency" aria-hidden="true">NT$</span>
                                           <input 
                                             type="number" min="0" max="100000000"
-                                            value={note.specialDiscount} 
+                                            id="special-discount" aria-describedby="special-discount-hint" value={note.specialDiscount} 
                                             onChange={(e) => setNote({...note, specialDiscount: e.target.value === '' ? '' : Number(e.target.value)})} 
-                                            className="w-full text-sm border border-red-200 bg-red-50 text-red-700 rounded pl-8 pr-3 py-2 focus:ring-red-500 focus:border-red-500" 
+                                            className="discount-amount w-full" 
                                             placeholder="0"
                                           />
                                       </div>
+                                      <p id="special-discount-hint" className="discount-hint">輸入要減免的金額即可，不用輸入負號；系統會自動扣除。</p>
                                   </div>
                                   
                                   <div><label className="block text-sm font-medium mb-2" htmlFor="adjustment-reason">報價調整原因（有差額時必填，會附在客戶報價）</label><input id="adjustment-reason" value={note.adjustmentReason} onChange={e => setNote({...note, adjustmentReason:e.target.value})} className="w-full border border-slate-300 rounded p-2" placeholder="例如：專案議價、整包服務價格" aria-describedby="adjustment-reason-hint" /><p id="adjustment-reason-hint" className="mt-2 text-xs text-slate-500">填寫內容會顯示在複製摘要、Excel 及列印報價；請用適合提供客戶的說明。</p></div>
