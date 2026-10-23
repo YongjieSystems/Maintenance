@@ -127,6 +127,6 @@ test('new catalogue wizard keeps new parent selections from category to model to
  const submit=async()=>{await h.nodes().find(n=>n.type==='form').props.onSubmit({preventDefault(){}});h.render();};
  await submit();assert.equal(closed,0);assert.match(h.text(h.render()),/儲存型號並新增故障/);
  h.input('setModelName','QA型號');await submit();assert.equal(closed,0);assert.match(h.text(h.render()),/儲存故障/);
- h.input('setIssueName','QA故障');h.input('setIssueMin','1000');h.input('setIssueMax','1000');h.input('setIssueTime','2');await submit();assert.equal(closed,1);
+ const field=(placeholder,value)=>{h.nodes().find(n=>n.props?.placeholder===placeholder).props.onChange({target:{value}});h.render();};field('輸入或選擇故障名稱...','QA故障');field('最低估價','1000');field('最高估價','1000');field('工時','2');await submit();assert.equal(closed,1);
  assert.equal(props.categoryData.at(-1).models[0].issues[0].name,'QA故障');
 });
