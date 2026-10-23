@@ -11,7 +11,7 @@ import {createHash} from 'node:crypto';
 // No real credentials, browser storage, production records or authenticated sessions are read.
 const html=fs.readFileSync(new URL('./index.html',import.meta.url),'utf8');
 const jsx=html.match(/<script type="text\/babel"[^>]*>([\s\S]*?)<\/script>/)[1];
-const compiled=Babel.transform(jsx+'\n globalThis.AppUnderTest=App; globalThis.catalogue=INITIAL_DATA;', {presets:['react'],plugins:['transform-modules-commonjs']}).code;
+const compiled=Babel.transform(jsx+'\n globalThis.AppUnderTest=App;globalThis.AddUnderTest=AddDataModal; globalThis.catalogue=INITIAL_DATA;', {presets:['react'],plugins:['transform-modules-commonjs']}).code;
 test('all original preset prices, service options and hourly rate stay unchanged',()=>{
  const block=html.match(/\/\/ --- BEGIN_INJECTED_DATA ---([\s\S]*?)\/\/ --- END_INJECTED_DATA ---/)[1].replaceAll('\r\n','\n');
  assert.equal(createHash('sha256').update(block).digest('hex'),'e4abd90035c67f916097d556bd5cbef346dfc536206a3a8c800ac2b4d98061d0');
@@ -19,10 +19,10 @@ test('all original preset prices, service options and hourly rate stay unchanged
 });
 function harness(seed={},authenticated=true) {
  const hooks=[], store=new Map(Object.entries(seed)), alerts=[], effects=[], clipboard=[], downloads=[];
- let cursor=0, tree, printed=0, failWrite=false;const elements=new Map();
+ let cursor=0, tree, printed=0, failWrite=false,isAdd=false,addProps;const elements=new Map();
  const React={
    createElement:(type,props,...children)=>({type,props:{...props,children:children.flat(Infinity)}}),
-   useState(initial){const i=cursor++;if(!(i in hooks))hooks[i]=i===0?authenticated:typeof initial==='function'?initial():initial;return [hooks[i],value=>{hooks[i]=typeof value==='function'?value(hooks[i]):value}];},
+   useState(initial){const i=cursor++;if(!(i in hooks))hooks[i]=i===0&&!isAdd?authenticated:typeof initial==='function'?initial():initial;return [hooks[i],value=>{hooks[i]=typeof value==='function'?value(hooks[i]):value}];},
    useRef(initial){const i=cursor++;return hooks[i]??=( {current:initial} );},
    useMemo(fn){cursor++;return fn();},
    useEffect(fn,deps){const i=cursor++;if(!hooks[i]||deps?.some((d,n)=>d!==hooks[i][n])){hooks[i]=deps;effects.push(fn);}},
@@ -36,7 +36,7 @@ function harness(seed={},authenticated=true) {
    document:{getElementById:id=>{if(!elements.has(id))elements.set(id,{});return elements.get(id)},createElement:()=>({click(){}})},
    exports:{},require:name=>name==='react'?React:name==='react-dom/client'?{createRoot:()=>({render(){}})}:name.startsWith('./repair-core.js')?core:name.startsWith('./catalogue-core.js')?catalogueCore:name.startsWith('./repair-team.js')?{initRepairTeam(bridge){if(authenticated)bridge.onCatalogue({catalogue:context.catalogue,revision:1},{org:'qa',role:'MANAGER'});},saveSharedCatalogue:async data=>({catalogue:data,revision:2}),resetRepairLink(){},openRepairTeam(){}}:new Proxy({},{get:(_,key)=>String(key)})};
  vm.runInNewContext(compiled,context);
- const render=()=>{cursor=0;tree=context.AppUnderTest();while(effects.length)effects.shift()();cursor=0;tree=context.AppUnderTest();return tree;};
+ const render=()=>{cursor=0;tree=isAdd?context.AddUnderTest(addProps):context.AppUnderTest();while(effects.length)effects.shift()();cursor=0;tree=isAdd?context.AddUnderTest(addProps):context.AppUnderTest();return tree;};
  const walk=node=>node&&typeof node==='object'?[node,...(node.props?.children||[]).flatMap(walk)]:[];
  const nodes=()=>walk(tree);
  const text=node=>!node?'':typeof node==='string'||typeof node==='number'?String(node):(node.props?.children||[]).map(text).join('');
@@ -45,7 +45,7 @@ function harness(seed={},authenticated=true) {
  const input=(field,value)=>{const node=nodes().find(n=>n.props?.onChange?.toString().includes(field));assert.ok(node,`input ${field}`);node.props.onChange({target:{value}});render();};
  const history=()=>JSON.parse(store.get('yjst_repair_history_v1')||'[]');
  const select=()=>{click('桌上型電腦');click('一般組裝電腦');click('無法開機 (No Power)');};
- render();return {render,nodes,text,find,click,input,history,select,alerts,clipboard,downloads,store,context,setAuthentication(v){hooks[0]=v;if(v)hooks[2]={revision:1,role:'MANAGER',org:'qa',ready:true};return render()},get printText(){return elements.get('customer-print-text')?.textContent},get printed(){return printed},set failWrite(v){failWrite=v}};
+ render();return {openAdd(props){hooks.length=0;isAdd=true;addProps=props;render();},render,nodes,text,find,click,input,history,select,alerts,clipboard,downloads,store,context,setAuthentication(v){hooks[0]=v;if(v)hooks[2]={revision:1,role:'MANAGER',org:'qa',ready:true};return render()},get printText(){return elements.get('customer-print-text')?.textContent},get printed(){return printed},set failWrite(v){failWrite=v}};
 }
 
 test('maintenance has no shared password and employee logout removes customer quote controls',()=>{
@@ -118,4 +118,15 @@ test('manager add and edit catalogue drive the actual front quotation and clear 
  const editor=h.nodes().find(n=>n.type?.name==='EditDataModal');await editor.props.onSave('issue',issue.id,{...issue,estimatedCostMin:1500,estimatedCostMax:1500,estimatedTimeHours:3},model.id);h.render();assert.equal(h.nodes().some(n=>n.props?.onClick&&h.text(n)==='保存本機報價'),false);
  h.click('QA故障');h.click('保存本機報價');assert.equal(h.history()[0].totalMin,1500);assert.equal(h.history().at(-1).totalMin,1000);
  await assert.rejects(h.nodes().find(n=>n.type?.name==='AddDataModal').props.onSave('model',{name:'QA型號'},cat.id),/重複/);
+});
+
+
+test('new catalogue wizard keeps new parent selections from category to model to issue and only closes after completion',async()=>{
+ const h=harness();let closed=0;const props={isOpen:true,categoryData:h.context.catalogue,onClose:()=>closed++,onSave:async(type,values,parentId)=>{const id='wizard-'+type;props.categoryData=catalogueCore.changeCatalogue(props.categoryData,{action:'add',type,id,parentId,values});return {id,parentId};}};
+ h.openAdd(props);h.input('setCatName','QA連續新增');
+ const submit=async()=>{await h.nodes().find(n=>n.type==='form').props.onSubmit({preventDefault(){}});h.render();};
+ await submit();assert.equal(closed,0);assert.match(h.text(h.render()),/儲存型號並新增故障/);
+ h.input('setModelName','QA型號');await submit();assert.equal(closed,0);assert.match(h.text(h.render()),/儲存故障/);
+ h.input('setIssueName','QA故障');h.input('setIssueMin','1000');h.input('setIssueMax','1000');h.input('setIssueTime','2');await submit();assert.equal(closed,1);
+ assert.equal(props.categoryData.at(-1).models[0].issues[0].name,'QA故障');
 });

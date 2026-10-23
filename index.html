@@ -947,7 +947,7 @@
 
           const handleSubmit = async (e) => {
             e.preventDefault();if(saving)return;setFormError('');setSaving(true);try{
-            if (activeTab === 'issue' && !validateIssue({estimatedCostMin:issueMin, estimatedCostMax:issueMax, estimatedTimeHours:issueTime})) return alert('價格及工時須為非負有效數字，且最高價不得小於最低價。');
+            if (activeTab === 'issue' && !validateIssue({estimatedCostMin:issueMin, estimatedCostMax:issueMax, estimatedTimeHours:issueTime})) throw Error('價格及工時須為非負有效數字，且最高價不得小於最低價。');
             let saved;
             if (activeTab === 'category') {
               saved=await onSave('category', { name: catName, iconName: 'Wrench' });
@@ -1167,7 +1167,7 @@
                  finalData.estimatedTimeHours = Number(finalData.estimatedTimeHours);
               }
               
-              if (target.type === 'issue' && !validateIssue(finalData)) return alert('價格及工時須為非負有效數字，且最高價不得小於最低價。');
+              if (target.type === 'issue' && !validateIssue(finalData)) throw Error('價格及工時須為非負有效數字，且最高價不得小於最低價。');
               await onSave(target.type, target.data.id, finalData, target.parentId);
               onClose();
               }catch(error){setEditError(error.message);}finally{setEditSaving(false);}
