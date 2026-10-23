@@ -55,15 +55,15 @@ test('maintenance has no shared password and employee logout removes customer qu
 });
 test('quote UI → validation → save → dedupe → revision → load → new case',()=>{
  const h=harness();h.select();assert.match(h.text(h.render()),/800/);
- h.input('manualTotalMin','100');assert.equal(h.find('儲存報價').props.disabled,true);
- h.input('adjustmentReason','測試專案');h.input('customerName','測試客戶');h.click('儲存報價');h.click('儲存報價');
+ h.input('manualTotalMin','100');assert.equal(h.find('保存本機報價').props.disabled,true);
+ h.input('adjustmentReason','測試專案');h.input('customerName','測試客戶');h.click('保存本機報價');h.click('保存本機報價');
  assert.equal(h.history().length,1);assert.equal(h.history()[0].revision,1);
  const first=h.history()[0];assert.equal(first.totalMin,100);assert.equal(first.calculatedMin+first.adjustmentMin,100);assert.equal(first.calculatedMax+first.adjustmentMax,100);
- h.input('manualTotalMin','200');h.click('儲存報價');assert.equal(h.history().length,2);assert.equal(h.history()[0].revision,2);
+ h.input('manualTotalMin','200');h.click('保存本機報價');assert.equal(h.history().length,2);assert.equal(h.history()[0].revision,2);
  // Invoke the history modal's public load callback with the original saved snapshot.
  h.click('估價紀錄');const modal=h.nodes().find(n=>n.props?.onLoad);modal.props.onLoad(first);h.render();
  assert.equal(h.nodes().find(n=>n.props?.onChange?.toString().includes('customerName')).props.value,'測試客戶');
- h.click('儲存報價');assert.equal(h.history()[0].revision,3);
+ h.click('保存本機報價');assert.equal(h.history()[0].revision,3);
  h.click('＋ 新案件');assert.equal(h.nodes().some(n=>n.props?.value==='測試客戶'),false);assert.equal(h.history().length,3);
 });
 test('copy, Excel and print include adjustment reason and allow direct quotation',async()=>{
@@ -78,9 +78,9 @@ test('storage failure is visible and prevents print',()=>{
  const h=harness();h.select();h.failWrite=true;h.click('儲存並列印');assert.equal(h.printed,0);assert.match(h.text(h.render()),/本機儲存失敗/);assert.equal(h.history().length,0);
 });
 test('backup and restore merge without overwriting current records',async()=>{
- const h=harness();h.select();h.click('儲存報價');h.click('案件備份');
+ const h=harness();h.select();h.click('保存本機報價');h.click('案件備份');
  const content=await h.downloads[0].text(), parsed=JSON.parse(content);assert.equal(parsed.format,'yjst-maintenance-backup');assert.equal(parsed.history.length,1);assert.ok(parsed.data.length);
- h.click('＋ 新案件');h.select();h.click('儲存報價');
+ h.click('＋ 新案件');h.select();h.click('保存本機報價');
  const fileInput=h.nodes().find(n=>n.props?.type==='file');
  await fileInput.props.onChange({target:{files:[{size:content.length,text:async()=>content}],value:'backup.json'}});h.render();assert.equal(h.history().length,2);
  await fileInput.props.onChange({target:{files:[{size:5,text:async()=>'{bad'}],value:'bad.json'}});assert.equal(h.history().length,2);assert.match(h.alerts.at(-1),/無法還原/);
@@ -88,19 +88,19 @@ test('backup and restore merge without overwriting current records',async()=>{
 test('handover retains its existing base fee and 4–6 device surcharge',()=>{
  const h=harness();h.click('全新/二手設備交機');const cat=h.context.catalogue.find(c=>c.id==='new-used-equipment');h.click(cat.models[0].name);h.render();
  const base=h.nodes().find(n=>n.props?.onChange?.toString().includes('finalEstimatedTime'));assert.ok(base);
- h.click('儲存報價');const initial=h.history()[0];
+ h.click('保存本機報價');const initial=h.history()[0];
  const driver=h.nodes().find(n=>n.props?.onChange?.toString().includes('pcDriver'));assert.ok(driver);driver.props.onChange({target:{checked:true}});h.render();
- const count=h.nodes().find(n=>n.props?.onChange?.toString().includes('pcCountType'));assert.ok(count);count.props.onChange({target:{value:'4-6'}});h.render();h.click('儲存報價');assert.equal(h.history()[0].totalMin,initial.totalMin+500);
+ const count=h.nodes().find(n=>n.props?.onChange?.toString().includes('pcCountType'));assert.ok(count);count.props.onChange({target:{value:'4-6'}});h.render();h.click('保存本機報價');assert.equal(h.history()[0].totalMin,initial.totalMin+500);
 });
 test('more than 50 quotation versions remain available',()=>{
  const h=harness();h.select();h.input('adjustmentReason','測試議價');
- for(let n=1;n<=51;n++){h.input('manualTotalMin',String(n));h.click('儲存報價');}
+ for(let n=1;n<=51;n++){h.input('manualTotalMin',String(n));h.click('保存本機報價');}
  assert.equal(h.history().length,51);assert.equal(h.history()[0].revision,51);
 });
 test('a stale tab cannot overwrite another saved revision',()=>{
- const h=harness();h.select();h.click('儲存報價');h.input('manualTotalMin','100');h.input('adjustmentReason','測試議價');
+ const h=harness();h.select();h.click('保存本機報價');h.input('manualTotalMin','100');h.input('adjustmentReason','測試議價');
  const original=h.history()[0], remote={...original,revision:2,fingerprint:'other-tab',totalText:'$300'};
  h.store.set('yjst_repair_history_v1',JSON.stringify([remote,original]));
- h.click('儲存報價');assert.equal(h.history()[0].totalText,'$300');assert.match(h.text(h.render()),/其他分頁已更新/);
- h.click('儲存報價');assert.equal(h.history()[0].revision,3);assert.equal(h.history()[1].fingerprint,'other-tab');
+ h.click('保存本機報價');assert.equal(h.history()[0].totalText,'$300');assert.match(h.text(h.render()),/其他分頁已更新/);
+ h.click('保存本機報價');assert.equal(h.history()[0].revision,3);assert.equal(h.history()[1].fingerprint,'other-tab');
 });
