@@ -948,12 +948,13 @@
           const handleSubmit = async (e) => {
             e.preventDefault();if(saving)return;setFormError('');setSaving(true);try{
             if (activeTab === 'issue' && !validateIssue({estimatedCostMin:issueMin, estimatedCostMax:issueMax, estimatedTimeHours:issueTime})) return alert('價格及工時須為非負有效數字，且最高價不得小於最低價。');
+            let saved;
             if (activeTab === 'category') {
-              await onSave('category', { name: catName, iconName: 'Wrench' });
+              saved=await onSave('category', { name: catName, iconName: 'Wrench' });
             } else if (activeTab === 'model') {
-              await onSave('model', { name: modelName }, parentCatId);
+              saved=await onSave('model', { name: modelName }, parentCatId);
             } else {
-              await onSave('issue', {
+              saved=await onSave('issue', {
                 name: issueName,
                 description: issueDesc,
                 estimatedCostMin: Number(issueMin),
@@ -970,7 +971,9 @@
             setIssueMax(0);
             setIssueTime(1);
             setIssueParts('');
-            onClose();
+            if(activeTab==='category'){setParentCatId(saved.id);setParentModelId('');setActiveTab('model');}
+            else if(activeTab==='model'){setParentModelId(saved.id);setActiveTab('issue');}
+            else onClose();
             }catch(error){setFormError(error.message);}finally{setSaving(false);}
           };
 
@@ -1118,7 +1121,7 @@
                       </div>
                       <div className="flex gap-3">
                          <button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium">取消</button>
-                         <button disabled={saving} type="submit" className="px-6 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700">儲存</button>
+                         <button disabled={saving} type="submit" className="px-6 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700">{saving?'保存中…':activeTab==='category'?'儲存類別並新增型號':activeTab==='model'?'儲存型號並新增故障':'儲存故障'}</button>
                       </div>
                     </div>
                   </form>
@@ -1605,7 +1608,7 @@
               if(type==='category'){setSelectedCategoryId(id);setSelectedModelId(null);}
               if(type==='model'){setSelectedCategoryId(parentId);setSelectedModelId(id);}
               if(type==='issue'){const c=data.find(c=>c.models.some(m=>m.id===parentId));setSelectedCategoryId(c?.id);setSelectedModelId(parentId);}
-              return true;
+              return {id,parentId};
           };
           const handleUpdateData = (type,id,values,parentId) => commitCatalogue({action:'update',type,id,parentId,values});
           const handleResetDatabase = () => {throw Error('共用價目不可一鍵重置；如需調整請逐項編輯，避免影響全公司。');};
