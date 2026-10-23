@@ -35,7 +35,7 @@ export function initRepairTeam(bridge){
    const credit={value:'0'};
    const service=field(card,'維修交付方式','select');option(service,'IN_STORE','到店維修');option(service,'PICKUP','收送維修');
    const delivery=field(card,'約定收送時段與範圍（新收送案件必填）');delivery.maxLength=500;
-   if(link){const job=jobs.find(j=>j.case_id===link.id);if(job){credit.value=box.dataset.credit || '0';delivery.value=box.dataset.window || ''}}
+   if(link){const job=jobs.find(j=>j.case_id===link.id);if(job){credit.value='0';delivery.value=box.dataset.window || '';service.value=context.cases.find(c=>c.id===link.id)?.service||'IN_STORE';service.disabled=true;}}
    button(card,'保存到團隊',async()=>{
     const local=bridge.getSnapshot();if(!local)throw Error('請先完成維修估價並修正紅色提示');
     const result=await rpc('yj_save_repair',{p_org:context.org,p_case:link?.id || null,p_expected:selectedRevision,p_source_expected:link?.revision || 0,p_draft:local.draft,p_credit:Number(credit.value || 0),p_service:service.value,p_window:delivery.value});
