@@ -248,3 +248,22 @@ button:disabled {opacity:.5;cursor:not-allowed;}
 .catalogue-price-preview {padding:14px 16px;border:1px solid #b4c9e6;border-radius:12px;background:#eff6ff;color:#17304d;font-size:17px;line-height:1.8;overflow-wrap:anywhere;}
 
 .warranty-template-link {display:inline-flex;align-items:center;justify-content:center;min-height:52px;font-size:18px;line-height:1.6;text-decoration:none;}
+
+/* Shared prefix column: currency and delivery icons follow the input's actual height. */
+@media screen {
+ .estimate-pane .money-input {position:relative;width:100%;min-width:0;}
+ .estimate-pane .money-prefix {position:absolute;left:1px;top:1px;bottom:1px;width:54px;display:flex;align-items:center;justify-content:center;border-right:1px solid #d5dfeb;color:#425773;font-size:16px;font-weight:600;line-height:1;pointer-events:none;}
+ .estimate-pane .money-prefix svg {display:block;width:20px;height:20px;flex:none;}
+ .estimate-pane .money-input>input {width:100%!important;min-width:0;height:58px;min-height:58px;padding:12px 14px 12px 70px!important;box-sizing:border-box;text-align:left;line-height:1.6;}
+ .estimate-pane .discount-currency {width:54px;min-width:54px;justify-content:center;padding:0;font-size:16px;line-height:1;}
+ .estimate-pane .discount-input-group {height:58px;box-sizing:border-box;}
+ .estimate-pane .discount-input-group input.discount-amount {height:56px;min-height:56px;padding:12px 14px!important;text-align:left;line-height:1.6;}
+ .labor-details {display:grid;gap:12px;}
+ .labor-controls {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:16px;}
+ .labor-field {display:grid;grid-template-rows:auto 58px;gap:6px;min-width:0;}
+ .labor-field>label {display:block;margin:0;}
+ .estimate-pane .labor-field>input {width:100%!important;min-width:0;height:58px;min-height:58px;padding:12px 14px!important;box-sizing:border-box;}
+}
+@media screen and (max-width:420px) {
+ .labor-controls {grid-template-columns:1fr;padding:12px;}
+}
