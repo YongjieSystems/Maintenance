@@ -1,14 +1,15 @@
 let catalogueContext=null;
 export async function saveSharedCatalogue(catalogue,revision){if(!catalogueContext || catalogueContext.role!=='MANAGER')throw Error('只有主管可修改公司共用價目');const {client,org}=catalogueContext;const r=await client.rpc('yj_save_repair_catalogue',{p_org:org,p_expected:revision,p_catalogue:catalogue});if(r.error)throw r.error;if(catalogueContext?.org!==org)throw Error('團隊已切換，請重新載入價目');return r.data;}
-import {initTeamWorkspace} from './team-workspace.js?v=3.1.3';
-import {amountText,adjustmentText,customerRepairSummary} from './repair-core.js?v=3.1.3';
-import {teamError} from './team-core.js?v=3.1.3';
-let resetLink=()=>{};
+import {initTeamWorkspace} from './team-workspace.js?v=3.2.0';
+import {amountText,adjustmentText,customerRepairSummary} from './repair-core.js?v=3.2.0';
+import {teamError} from './team-core.js?v=3.2.0';
+let resetLink=()=>{},saveTeam=async()=>{throw Error('團隊功能尚未就緒，請稍候');};
+export const saveRepairToTeam=()=>saveTeam();
 export const resetRepairLink=()=>resetLink();
 export function openRepairTeam(){document.getElementById('repair-team-panel').hidden=false;}
 export function initRepairTeam(bridge){
  const panel=document.getElementById('repair-team-panel'); if(!panel || panel.dataset.ready) return;panel.dataset.ready='true';
- const box=document.getElementById('repair-cloud');let context=null,jobs=[],link=null,selectedRevision=0,busy=false;const formValues=new Map();let lastRefreshView='';
+ const box=document.getElementById('repair-cloud');let context=null,jobs=[],link=null,selectedRevision=0,busy=false,saving=false,linkGeneration=0;const formValues=new Map();let lastRefreshView='';
  const node=(tag,text,cls='')=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;e.className=cls;return e};
  const message=text=>{document.getElementById('team-status').textContent=text};
  const check=r=>{if(r.error)throw r.error;return r.data};
@@ -20,7 +21,7 @@ export function initRepairTeam(bridge){
  const close=()=>{panel.hidden=true};document.getElementById('repair-team-back').onclick=close;
  // Existing onboarding links continue to use the inspection application's activation page.
  window.switchTab=()=>openRepairTeam();
- resetLink=()=>{link=null;selectedRevision=0;formValues.clear();box.replaceChildren();box.dataset.credit='0';box.dataset.window='';if(context?.user)render()};
+ resetLink=()=>{linkGeneration++;link=null;selectedRevision=0;formValues.clear();box.replaceChildren();box.dataset.credit='0';box.dataset.window='';if(context?.user)render()};
  async function refreshRepairs(){
   const expectedContext=context;
   if(!context?.org){jobs=[];box.replaceChildren();return}
@@ -38,16 +39,24 @@ export function initRepairTeam(bridge){
    const card=node('section',undefined,'bg-white p-6 border rounded-2xl space-y-4');card.append(node('h3','保存共用維修報價','text-xl font-bold'));
    card.append(node('p',link?`正在修改：${link.customer || link.id} · 維修版本 ${selectedRevision}`:'新維修單獨立計費，完成後保存，同事即可查詢，不需等主管。','text-sm'));
    const credit={value:'0'};
-   const service=field(card,'維修交付方式','select');option(service,'IN_STORE','到店維修');option(service,'PICKUP','收送維修');
-   const delivery=field(card,'約定收送時段與範圍（新收送案件必填）');delivery.maxLength=500;
-   if(link){const job=jobs.find(j=>j.case_id===link.id);if(job){credit.value='0';delivery.value=box.dataset.window || '';service.value=context.cases.find(c=>c.id===link.id)?.service||'IN_STORE';service.disabled=true;}}
-   button(card,'保存到團隊',async()=>{
+   const service={value:'IN_STORE'},delivery={value:box.dataset.window || ''};
+   card.append(node('p','交付方式與收送時段請回估價頁的「保存與交付」填寫。','text-sm'));
+   saveTeam=async()=>{
+    if(saving)throw Error('正在保存，請稍候');
+    if(!context?.org || !['MANAGER','STAFF'].includes(context.role))throw Error('請先使用員工帳號登入');
     const local=bridge.getSnapshot();if(!local)throw Error('請先完成維修估價並修正紅色提示');
-    const result=await rpc('yj_save_repair',{p_org:context.org,p_case:link?.id || null,p_expected:selectedRevision,p_source_expected:link?.revision || 0,p_draft:local.draft,p_credit:Number(credit.value || 0),p_service:service.value,p_window:delivery.value});
+    const saveOrg=context.org,saveGeneration=linkGeneration;saving=true;try{
+    const result=await rpc('yj_save_repair',{p_org:context.org,p_case:link?.id || null,p_expected:selectedRevision,p_source_expected:link?.revision || 0,p_draft:local.draft,p_credit:Number(credit.value || 0),p_service:local.service || service.value,p_window:local.deliveryWindow ?? delivery.value});
+    if(context?.org!==saveOrg)throw Error('團隊已切換，請回原團隊查詢剛保存的版本');
+    if(linkGeneration!==saveGeneration)throw Error('先前案件已保存，目前已切換表單，請到團隊紀錄查閱');
     link={...(link || {}),id:result.case_id,revision:result.snapshot.sourceRevision,customer:result.snapshot.customer};selectedRevision=result.revision;
     box.dataset.credit=String(result.snapshot.inspectionCredit);box.dataset.window=result.snapshot.deliveryWindow || '';
-    await refreshRepairs();message(`維修 ${result.snapshot.orderId} 第 ${result.revision} 版已同步；請更新團隊列表以編排路線，已保存共用，可直接報價。`);
-   });
+    bridge.onSaved?.(result,local);
+    try{await refreshRepairs();}catch{message('已保存，但清單暫時無法更新');}
+    return result;
+    }finally{saving=false;}
+   };
+   button(card,'保存到團隊',async()=>{await saveTeam();message('已保存到團隊，同事可接手。');});
    button(card,'另存新維修單（保留表單）',async()=>resetLink());
    box.append(card);
   }
@@ -63,8 +72,8 @@ export function initRepairTeam(bridge){
     button(row,'載入修改',async()=>{
      if(!job.origin_direct)throw Error('此為舊關聯紀錄，請另建獨立維修單，不再帶入檢測費。');
      const latest=check(await context.client.from('yj_repair_jobs').select('*').eq('case_id',job.case_id).single());
-     const s=await readSnapshot(latest.revision);if(!bridge.onLoad(s.draft))return;
-     link={...(source || {}),id:job.case_id,revision:source?.revision || latest.source_revision,customer:s.customer};selectedRevision=latest.revision;box.dataset.credit=String(s.inspectionCredit);box.dataset.window=s.deliveryWindow || '';formValues.clear();box.replaceChildren();render();close();
+     const s=await readSnapshot(latest.revision);if(!bridge.onLoad(s.draft,{service:source?.service || 'IN_STORE',window:s.deliveryWindow || ''}))return;
+     linkGeneration++;link={...(source || {}),id:job.case_id,revision:source?.revision || latest.source_revision,customer:s.customer};selectedRevision=latest.revision;box.dataset.credit=String(s.inspectionCredit);box.dataset.window=s.deliveryWindow || '';formValues.clear();box.replaceChildren();render();close();
     });
     button(row,'查看歷史版本（唯讀）',async()=>{
      const versions=check(await context.client.from('yj_repair_versions').select('revision,snapshot,created_at').eq('case_id',job.case_id).order('revision',{ascending:false}).limit(100));

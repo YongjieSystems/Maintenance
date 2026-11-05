@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import Babel from '@babel/standalone';
 import * as core from './repair-core.js';
+import * as workflow from './quote-workflow.js';
 import * as catalogueCore from './catalogue-core.js';
 import {createHash} from 'node:crypto';
 
@@ -34,7 +35,7 @@ function harness(seed={},authenticated=true) {
    window:{print:()=>printed++},
    URL:{createObjectURL:blob=>{downloads.push(blob);return 'blob:test'},revokeObjectURL:()=>{}},
    document:{getElementById:id=>{if(!elements.has(id))elements.set(id,{});return elements.get(id)},createElement:()=>({click(){}})},
-   exports:{},require:name=>name==='react'?React:name==='react-dom/client'?{createRoot:()=>({render(){}})}:name.startsWith('./repair-core.js')?core:name.startsWith('./catalogue-core.js')?catalogueCore:name.startsWith('./repair-team.js')?{initRepairTeam(bridge){if(authenticated)bridge.onCatalogue({catalogue:context.catalogue,revision:1},{org:'qa',role:'MANAGER'});},saveSharedCatalogue:async data=>({catalogue:data,revision:2}),resetRepairLink(){},openRepairTeam(){}}:new Proxy({},{get:(_,key)=>String(key)})};
+   exports:{},require:name=>name==='react'?React:name==='react-dom/client'?{createRoot:()=>({render(){}})}:name.startsWith('./repair-core.js')?core:name.startsWith('./catalogue-core.js')?catalogueCore:name.startsWith('./quote-workflow.js')?{...workflow,askOutput:(host,review,unsaved,execute,save,notify)=>{context.pendingOutput={review,unsaved,execute,save};if(context.autoConfirm!==false && !review.errors.length)execute();}}:name.startsWith('./repair-team.js')?{initRepairTeam(bridge){context.bridge=bridge;if(authenticated)bridge.onCatalogue({catalogue:context.catalogue,revision:1},{org:'qa',role:'MANAGER'});},saveSharedCatalogue:async data=>({catalogue:data,revision:2}),resetRepairLink(){},openRepairTeam(){}}:new Proxy({},{get:(_,key)=>String(key)})};
  vm.runInNewContext(compiled,context);
  const render=()=>{cursor=0;tree=isAdd?context.AddUnderTest(addProps):context.AppUnderTest();while(effects.length)effects.shift()();cursor=0;tree=isAdd?context.AddUnderTest(addProps):context.AppUnderTest();return tree;};
  const walk=node=>node&&typeof node==='object'?[node,...(node.props?.children||[]).flatMap(walk)]:[];
@@ -51,8 +52,8 @@ function harness(seed={},authenticated=true) {
 test('maintenance has no shared password and employee logout removes customer quote controls',()=>{
  assert.doesNotMatch(html,/loginPass|handleLogin|存取密碼/);
  const h=harness({},false);assert.match(h.text(h.render()),/使用員工帳號/);assert.equal(h.nodes().some(n=>n.props?.type==='password'),false);
- h.setAuthentication(true);h.select();assert.ok(h.find('複製摘要'));
- h.setAuthentication(false);assert.equal(h.nodes().some(n=>n.props?.onClick&&h.text(n).includes('複製摘要')),false);
+ h.setAuthentication(true);h.select();assert.ok(h.find('複製客戶報價'));
+ h.setAuthentication(false);assert.equal(h.nodes().some(n=>n.props?.onClick&&h.text(n).includes('複製客戶報價')),false);
 });
 test('quote UI → validation → save → dedupe → revision → load → new case',()=>{
  const h=harness();h.select();assert.match(h.text(h.render()),/800/);
@@ -69,15 +70,15 @@ test('quote UI → validation → save → dedupe → revision → load → new 
 });
 test('copy, Excel and print include adjustment reason and allow direct quotation',async()=>{
  const h=harness();h.select();h.input('manualTotalMin','100');h.input('adjustmentReason','測試議價');h.input('technicianNotes','Customer note');
- h.click('複製摘要');await Promise.resolve();h.render();const preview=h.nodes().find(n=>n.type==='details'&&n.props.className==='customer-preview no-print');assert.equal(h.text(preview.props.children.find(n=>n?.type==='pre')),h.clipboard[0]);assert.match(h.clipboard[0],/維修整包費用：\$100/);assert.doesNotMatch(h.clipboard[0],/價差|報價人員|共用案件|核准後另提供|此為草稿/);assert.match(h.clipboard[0],/報價調整原因：測試議價/);assert.match(h.clipboard[0],/【永捷維修報價】/);assert.match(h.clipboard[0],/【報價聲明】/);assert.match(h.clipboard[0],/不維修仍須支付已約定/);assert.doesNotMatch(h.clipboard[0],/【服務約定】|成本邏輯|油資/);
+ h.click('複製客戶報價');await Promise.resolve();h.render();const preview=h.nodes().find(n=>n.type==='details'&&n.props.className==='customer-preview no-print');assert.equal(h.text(preview.props.children.find(n=>n?.type==='pre')),h.clipboard[0]);assert.match(h.clipboard[0],/維修整包費用：\$100/);assert.doesNotMatch(h.clipboard[0],/價差|報價人員|共用案件|核准後另提供|此為草稿/);assert.match(h.clipboard[0],/報價調整原因：測試議價/);assert.match(h.clipboard[0],/【永捷維修報價】/);assert.match(h.clipboard[0],/【報價聲明】/);assert.match(h.clipboard[0],/不維修仍須支付已約定/);assert.doesNotMatch(h.clipboard[0],/【服務約定】|成本邏輯|油資/);
  assert.equal(h.clipboard[0].split('Customer note').length-1,1);assert.equal(h.nodes().filter(n=>n.type==='textarea'&&n.props.id==='customer-quote-notes').length,1);
  const sheets=[];h.context.XLSX={utils:{book_new:()=>({}),aoa_to_sheet:rows=>{sheets.push(rows);return {}},book_append_sheet(){}},writeFile(){}};
  h.click('Excel');const rows=sheets[0];assert.ok(JSON.stringify(rows).includes('Customer note'));assert.ok(rows.some(row=>row[0]==='維修整包費用：$100'));assert.ok(JSON.stringify(rows).includes('報價調整原因：測試議價'));assert.equal(h.history().length,1);
- h.click('儲存並列印');assert.equal(h.printed,1);assert.equal(h.printText,h.clipboard[0]);assert.equal(h.history().length,1);
- h.input('shippingCost',-1);assert.equal(h.find('儲存並列印').props.disabled,true);
+ h.click('列印客戶報價');assert.equal(h.printed,1);assert.equal(h.printText,h.clipboard[0]);assert.equal(h.history().length,1);
+ h.input('shippingCost',-1);assert.equal(h.find('列印客戶報價').props.disabled,true);
 });
 test('storage failure is visible and prevents print',()=>{
- const h=harness();h.select();h.failWrite=true;h.click('儲存並列印');assert.equal(h.printed,0);assert.match(h.text(h.render()),/本機儲存失敗/);assert.equal(h.history().length,0);
+ const h=harness();h.select();h.failWrite=true;h.click('列印客戶報價');assert.equal(h.printed,0);assert.match(h.text(h.render()),/本機儲存失敗/);assert.equal(h.history().length,0);
 });
 test('backup and restore merge without overwriting current records',async()=>{
  const h=harness();h.select();h.click('保存本機報價');h.click('案件備份');
@@ -135,4 +136,12 @@ test('new catalogue wizard keeps new parent selections from category to model to
 
 test('optional warranty template is printable and shipped independently',()=>{
  const warranty=fs.readFileSync(new URL('./repair-warranty.html',import.meta.url),'utf8');assert.match(html,/維修保固條款（另印）/);assert.match(warranty,/window.print\(\)/);assert.match(warranty,/repair-service-parts-warranty-2026-10-23.pdf/);assert.match(warranty,/3個月/);assert.match(warranty,/1個月/);assert.match(warranty,/contenteditable/);assert.doesNotMatch(warranty,/localStorage|supabase|fetch\(/);assert.doesNotMatch(html,/Print View Note|無特殊備註/);
+});
+
+test('repair preview and output use the saved team number and version without changing fees',async()=>{
+ const h=harness();h.select();h.input('customerName','測試客戶');h.input('quotationPersonnel','測試經辦');
+ const submitted=h.context.bridge.getSnapshot();h.context.bridge.onSaved({revision:4,snapshot:{orderId:'R-CANONICAL-QA'}},submitted);h.render();
+ const preview=h.nodes().find(n=>n.type==='details'&&n.props.className==='customer-preview no-print');const text=h.text(preview.props.children.find(n=>n?.type==='pre'));
+ assert.match(text,/R-CANONICAL-QA／第4版/);h.click('複製客戶報價');await Promise.resolve();assert.equal(h.clipboard[0],text);assert.match(text,/800.*3,500/);
+ h.input('customerName','另一位客戶');const changed=h.context.bridge.getSnapshot();assert.notEqual(changed.orderId,'R-CANONICAL-QA');
 });

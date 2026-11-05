@@ -267,3 +267,6 @@ button:disabled {opacity:.5;cursor:not-allowed;}
 @media screen and (max-width:420px) {
  .labor-controls {grid-template-columns:1fr;padding:12px;}
 }
+
+.quote-workflow input:not([type=checkbox]),.quote-workflow select{display:block;box-sizing:border-box;width:100%;min-height:58px;margin-top:6px;padding:12px;border:1px solid #9bafce;border-radius:10px;background:#fff;color:#183153;font:inherit}
+#workflow-confirm button{margin:8px 8px 0 0} @media(max-width:600px){#workflow-confirm button{margin:8px 0 0}}

@@ -1,4 +1,4 @@
-import {QUOTE_DECLARATIONS} from './customer-declaration.js?v=3.1.3';
+import {QUOTE_DECLARATIONS} from './customer-declaration.js?v=3.2.0';
 // Shared by the screen, saved quotations and exports. Price-book values stay unchanged.
 export const money = value => Math.round((value + Number.EPSILON) * 100) / 100;
 export const amountText = (min, max = min) => min === max
@@ -97,6 +97,7 @@ export function customerRepairSummary(s, official=false) {
  ...((s.adjustmentReason || note.adjustmentReason)?.trim()?['報價調整原因：'+(s.adjustmentReason || note.adjustmentReason).trim()]:[]),
  ...((cloud?note.activeParts:s.activeParts)?.length?['約定零件：'+(cloud?note.activeParts:s.activeParts).join('、')]:[]),
  ...(s.handoverItems?.length?['交機項目：'+s.handoverItems.join('、')]:[]),
+ ...(!cloud && s.deliveryWindow?['收送時段：'+s.deliveryWindow]:[]),
  ...(cloud?[
  ...(s.inspectionTotal>0?['原檢測與收送：'+fmt(s.inspectionTotal)]:[]),
  ...(s.inspectionCredit>0?['歷史檢測費折抵'+'：−'+fmt(s.inspectionCredit)]:[]),
