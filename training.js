@@ -1,24 +1,35 @@
-export const TRAINING_SECTIONS = [{"id": "copy-mobile-fix", "title": "複製沒有反應怎麼辦？", "steps": ["按「複製客戶報價」後，未保存或有漏填會在畫面中央出現確認視窗。選先保存，或只輸出目前畫面。", "成功時會顯示「已複製客戶報價」，再貼到LINE。", "若瀏覽器拒絕剪貼簿，系統會開啟客戶文字；按「選取全部文字」，長按選「複製」。亦可用Chrome或Safari開啟網站再試。"], "notes": ["保存失敗或內容已變更會留在確認視窗，不會假裝複製成功。"]},
+export const TRAINING_SECTIONS = [
   {
-    "id": "save-output-v6",
-    "title": "新版：保存、輸出與提醒",
-    "lead": "先保存讓同事接手，再交付客戶；不用等主管核准。",
+    "id": "customer-copy-v7",
+    "title": "中央確認與複製：照著做",
+    "lead": "三套操作相同。看到成功提示，才表示自動複製已完成。",
     "steps": [
-      "三套使用相同名稱：「保存到團隊」、「複製客戶報價」、「列印客戶報價」。",
-      "填寫後先看客戶預覽，確認費用與約定，再按保存到團隊。看到成功、時間與版本，才表示已共用。",
-      "畫面顯示「有內容尚未保存」時，複製或列印會讓你選「保存到團隊並繼續」或「只輸出目前畫面」。",
-      "資料還未問齊可先保存；漏填會提醒。日期顛倒或無效金額須先修正，才可交付。",
-      "檢測、維修、租賃各自獨立，不帶入費用、不自動折抵，也不恢復主管核准。"
+      "先看「客戶報價預覽」，核對客戶、服務、費用及備註，再按「複製客戶報價」。",
+      "未保存或有漏填時，畫面中央會出現「交付客戶報價前確認」。如果已保存且資料齊全，可能直接複製，不再跳確認。",
+      "建議選「保存到團隊並繼續」；只是先傳目前試算，可選「只輸出目前畫面」。後者不會替你保存共用。",
+      "看到「已複製客戶報價」成功提示後，貼到LINE或訊息。再核對一次內容，才傳給客戶。",
+      "若出現「手動複製客戶報價」，按「選取全部文字」，再長按已選文字，選手機的「複製」。電腦可按Ctrl+C，Mac按Command+C。",
+      "手動複製後貼到LINE確認，再按「完成／關閉」。關閉視窗本身不等於複製；成功提示與內部提醒都不要當成報價傳出。"
     ],
     "notes": [
-      [
-        "本機備援",
-        "本機草稿與本機報價只在這個瀏覽器，不等於團隊已保存。"
-      ],
-      [
-        "角色不變",
-        "助理與已開通助理同等權限的工程師可直接估價、共用、複製及列印；主管維護員工與公司價目，事後查閱。"
-      ]
+      "仍不能複製：LINE等內建瀏覽器可能限制剪貼簿。用選單的「在瀏覽器開啟」，改以Chrome或Safari開啟正式網站，再登入並操作。",
+      "保存失敗怎麼辦：確認視窗會顯示離線、版本衝突等原因，且不會繼續複製。按返回修改或處理原因後重試；不要連續重複按。"
+    ]
+  },
+  {
+    "id": "save-output-v6",
+    "title": "三套統一：保存、確認與複製",
+    "lead": "經辦直接報價，不用等主管核准。",
+    "steps": [
+      "先看「客戶報價預覽」，核對客戶、服務、費用及備註，再按「複製客戶報價」。",
+      "未保存或有漏填時，畫面中央會出現「交付客戶報價前確認」。如果已保存且資料齊全，可能直接複製，不再跳確認。",
+      "建議選「保存到團隊並繼續」；只是先傳目前試算，可選「只輸出目前畫面」。後者不會替你保存共用。",
+      "看到「已複製客戶報價」成功提示後，貼到LINE或訊息。再核對一次內容，才傳給客戶。",
+      "若出現手動複製視窗，按「選取全部文字」，再長按選「複製」。詳細步驟看第8、12、17頁。"
+    ],
+    "notes": [
+      "共用與本機不同：本機草稿只留在這個瀏覽器；只輸出目前畫面也不等於保存到團隊。檢測、維修、租賃各自獨立計費。",
+      "主管權限不變：助理與已開通同等權限的工程師可估價、共用、複製及列印；主管維護員工、公司價目與公告，事後查閱紀錄。"
     ]
   },
   {
@@ -148,25 +159,19 @@ export const TRAINING_SECTIONS = [{"id": "copy-mobile-fix", "title": "複製沒�
   },
   {
     "id": "0",
-    "title": "三套統一：保存與交付",
+    "title": "三套統一：保存、確認與複製",
     "steps": [
-      "三套使用相同名稱：「保存到團隊」、「複製客戶報價」、「列印客戶報價」。",
-      "填寫後先看客戶預覽，確認費用與約定，再按保存到團隊。看到成功、時間與版本，才表示已共用。",
-      "畫面顯示「有內容尚未保存」時，複製或列印會讓你選「保存到團隊並繼續」或「只輸出目前畫面」。",
-      "資料還未問齊可先保存；漏填會提醒。日期顛倒或無效金額須先修正，才可交付。",
-      "檢測、維修、租賃各自獨立，不帶入費用、不自動折抵，也不恢復主管核准。"
+      "先看「客戶報價預覽」，核對客戶、服務、費用及備註，再按「複製客戶報價」。",
+      "未保存或有漏填時，畫面中央會出現「交付客戶報價前確認」。如果已保存且資料齊全，可能直接複製，不再跳確認。",
+      "建議選「保存到團隊並繼續」；只是先傳目前試算，可選「只輸出目前畫面」。後者不會替你保存共用。",
+      "看到「已複製客戶報價」成功提示後，貼到LINE或訊息。再核對一次內容，才傳給客戶。",
+      "若出現手動複製視窗，按「選取全部文字」，再長按選「複製」。詳細步驟看第8、12、17頁。"
     ],
     "notes": [
-      [
-        "本機備援",
-        "本機草稿與本機報價只在這個瀏覽器，不等於團隊已保存。"
-      ],
-      [
-        "角色不變",
-        "助理與已開通助理同等權限的工程師可直接估價、共用、複製及列印；主管維護員工與公司價目，事後查閱。"
-      ]
+      "共用與本機不同：本機草稿只留在這個瀏覽器；只輸出目前畫面也不等於保存到團隊。檢測、維修、租賃各自獨立計費。",
+      "主管權限不變：助理與已開通同等權限的工程師可估價、共用、複製及列印；主管維護員工、公司價目與公告，事後查閱紀錄。"
     ],
-    "lead": "先保存讓同事接手，再交付客戶；不用等主管核准。"
+    "lead": "經辦直接報價，不用等主管核准。"
   },
   {
     "id": "1",
@@ -237,24 +242,19 @@ export const TRAINING_SECTIONS = [{"id": "copy-mobile-fix", "title": "複製沒�
   },
   {
     "id": "9",
-    "title": "維修：客戶報價與另印保固條款",
-    "lead": "備註只輸入一次，客戶預覽、複製、Excel與列印一致。",
+    "title": "維修：複製、列印與保固條款",
+    "lead": "中央確認會直接顯示在眼前，不必向上找提示。",
     "steps": [
-      "在「給客戶的備註」填維修說明，例如「已更換電容並完成測試」。欄位下方不再重複顯示預覽。",
-      "核對客戶預覽，按「複製客戶報價」、「列印客戶報價」或Excel。未保存或有漏填會先出現確認。",
-      "建議選「保存到團隊並繼續」；只需目前試算可選「只輸出目前畫面」。日期與金額錯誤先返回修改。",
-      "列印視窗核對紙張與頁數，再列印；要電子檔時選另存PDF。不要把內部管理畫面當報價截圖。",
-      "客戶需要保固條款時，按頁首「維修保固條款（另印）」。填單號、設備、完修日期及更換零件後列印，也可下載空白PDF。"
+      "先看「客戶報價預覽」，核對客戶、服務、費用及備註，再按「複製客戶報價」。",
+      "未保存或有漏填時，畫面中央會出現「交付客戶報價前確認」。如果已保存且資料齊全，可能直接複製，不再跳確認。",
+      "建議選「保存到團隊並繼續」；只是先傳目前試算，可選「只輸出目前畫面」。後者不會替你保存共用。",
+      "看到「已複製客戶報價」成功提示後，貼到LINE或訊息。再核對一次內容，才傳給客戶。",
+      "若無法自動複製，按選取全部文字，再長按選複製；電腦可按Ctrl+C。貼上確認後才關閉視窗。",
+      "紙本按「列印客戶報價」，表格按Excel。客戶需要保固說明時，另開「維修保固條款（另印）」，填資料後列印。"
     ],
     "notes": [
-      [
-        "保固範本",
-        "全新零件3個月、二手／其他維修零件1個月，限本次列明零件。交付前核對實際約定；範本不會自動加入每張報價。"
-      ],
-      [
-        "另印頁不會自動保存",
-        "填完請先列印或另存PDF；重新整理會清除另印頁的填寫內容。"
-      ]
+      "備註與保固：客戶備註只列一次，報價聲明維持5點。保固範本是選用附件，不會自動附在報價；範本欄位不自動保存。 全新零件3個月，二手／其他維修零件1個月，限本次更換零件，依實際維修約定辦理。",
+      "保存失敗怎麼辦：確認視窗會顯示離線、版本衝突等原因，且不會繼續複製。按返回修改或處理原因後重試；不要連續重複按。"
     ]
   },
   {
@@ -315,24 +315,18 @@ export const TRAINING_SECTIONS = [{"id": "copy-mobile-fix", "title": "複製沒�
   },
   {
     "id": "19",
-    "title": "新人練習與交班檢查",
-    "lead": "用教學資料練習，切勿把假資料保存到正式團隊。",
+    "title": "新人練習：複製與交班檢查",
+    "lead": "使用教學資料練習，勿將假資料存到正式團隊。",
     "steps": [
-      "檢測：選常用故障，確認文字加入後可修改；切換三種服務，確認門市收送費為0。",
-      "維修：選故障、填備註，確認預覽只出現一次；調整運費、折扣並核對合計。",
-      "租賃：試公版與客製價格；改日期後核對期數，分列送裝、回收與押金。",
-      "按複製或列印，練習返回修改與「只輸出目前畫面」。正式案件建議先保存到團隊。",
-      "交班前確認共用版本、待辦及收送事項。未保存修改及待估費用須交代清楚。"
+      "填教學客戶、設備及故障或租賃需求，先看預覽，核對費用與必要條件。",
+      "按複製客戶報價，確認中央視窗能看見；練習返回修改與只輸出目前畫面。",
+      "看到成功提示後貼到空白訊息，核對換行、金額與備註；練習時不要真的傳送。",
+      "如出現手動複製視窗，按選取全部文字、長按複製，再貼上確認。完成／關閉只會關視窗。",
+      "正式交班前，確認團隊已保存的版本、待估項目與收送約定；不要把內部提示截圖當客戶報價。"
     ],
     "notes": [
-      [
-        "版本",
-        "2026-11-05 第6版。適用檢測2.1.0、維修3.2.0、租賃2.2.0。"
-      ],
-      [
-        "主管不在也能工作",
-        "報價不需主管核准；員工管理、公司價目及公告等主管權限不變。"
-      ]
+      "版本：2026-11-06 第7版。適用檢測2.1.2、維修3.2.2、租賃2.2.2；現有收費及員工權限不變。",
+      "保存失敗怎麼辦：確認視窗會顯示離線、版本衝突等原因，且不會繼續複製。按返回修改或處理原因後重試；不要連續重複按。"
     ]
   }
 ];
@@ -345,9 +339,9 @@ function createTraining(){
  const close=make('button','返回原畫面','training-close');close.type='button';close.onclick=()=>dialog.close();header.append(title,close);
  const intro=make('p','依照自己的工作找到章節，逐步操作。查看說明不會修改或送出報價，關閉後可回到原表單。','training-intro');
  const manual=make('div',undefined,'manual-actions');
- const openPdf=make('a','開啟／列印員工手冊 PDF');openPdf.href='./manuals/employee-handbook-2026-11-05.pdf';openPdf.target='_blank';openPdf.rel='noopener noreferrer';
- const downloadPdf=make('a','下載員工手冊 PDF');downloadPdf.href='./manuals/employee-handbook-2026-11-05.pdf';downloadPdf.download='';
- manual.append(make('p','三套程式共用完整手冊｜2026/11/05 第6版・22 頁。含統一保存與輸出、日期及漏填提醒、常用範本、公版／客製化、收送及押金。'),openPdf,downloadPdf);
+ const openPdf=make('a','開啟／列印員工手冊 PDF');openPdf.href='./manuals/employee-handbook-2026-11-06.pdf';openPdf.target='_blank';openPdf.rel='noopener noreferrer';
+ const downloadPdf=make('a','下載員工手冊 PDF');downloadPdf.href='./manuals/employee-handbook-2026-11-06.pdf';downloadPdf.download='';
+ manual.append(make('p','三套程式共用完整手冊｜2026/11/06 第7版・22 頁。含中央確認視窗、複製成功提示、手機手動複製、保存、列印及完整接案流程。'),openPdf,downloadPdf);
  const searchLabel=make('label','搜尋步驟（例如：新增員工、保存報價、回送）','training-search-label');searchLabel.htmlFor='training-search';
  const search=make('input');search.id='training-search';search.type='search';search.placeholder='輸入關鍵字';search.autocomplete='off';
  const results=make('p',undefined,'training-results');results.setAttribute('role','status');results.setAttribute('aria-live','polite');
@@ -361,7 +355,7 @@ function createTraining(){
  }
  function filter(value){const query=value.trim().toLocaleLowerCase('zh-TW');let count=0;for(const {item,details} of sections){const visible=[item.title,...item.steps,...item.notes].join(' ').toLocaleLowerCase('zh-TW').includes(query);details.hidden=!visible;if(query&&visible)details.open=true;if(visible)count++;}results.textContent=query?(count?`找到 ${count} 個相關章節`:'沒有找到相關步驟，請換個關鍵字，或清空搜尋查看全部。'):`共 ${sections.length} 個章節；可點章節名稱或展開下方步驟。`;}
  search.oninput=()=>filter(search.value);filter('');
- dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v3.2.1｜現有收費不變。經辦直接報價，以團隊最新保存版本及公司約定為準。','training-footer'));
+ dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v3.2.2｜現有收費不變。經辦直接報價，以團隊最新保存版本及公司約定為準。','training-footer'));
  dialog.addEventListener('close',()=>{if(returnFocus?.isConnected)returnFocus.focus();});document.body.append(dialog);
 }
 export function openTraining(){if(!dialog)createTraining();returnFocus=document.activeElement;if(!dialog.open)dialog.showModal();dialog.querySelector('.training-close').focus();}
