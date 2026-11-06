@@ -339,9 +339,9 @@ function createTraining(){
  const close=make('button','返回原畫面','training-close');close.type='button';close.onclick=()=>dialog.close();header.append(title,close);
  const intro=make('p','依照自己的工作找到章節，逐步操作。查看說明不會修改或送出報價，關閉後可回到原表單。','training-intro');
  const quick=make('div',undefined,'manual-actions');
- const quickOpen=make('a','開啟／列印快速操作表');quickOpen.href='./manuals/quote-quick-reference-2026-11-06.pdf';quickOpen.target='_blank';quickOpen.rel='noopener noreferrer';
- const quickDownload=make('a','下載快速操作表 PDF');quickDownload.href='./manuals/quote-quick-reference-2026-11-06.pdf';quickDownload.download='';
- quick.append(make('p','座位旁參考：一頁快速操作表（A4）。三套共用，含保存、複製與手機手動複製。'),quickOpen,quickDownload);
+ const quickOpen=make('a','開啟／列印快速操作表');quickOpen.href='./manuals/quote-quick-reference-2026-11-06-v2.pdf';quickOpen.target='_blank';quickOpen.rel='noopener noreferrer';
+ const quickDownload=make('a','下載快速操作表 PDF');quickDownload.href='./manuals/quote-quick-reference-2026-11-06-v2.pdf';quickDownload.download='';
+ quick.append(make('p','座位旁參考：一頁快速操作表（A4）。三套共用，含正式網址、QR Code、保存、複製與手機手動複製。'),quickOpen,quickDownload);
  const manual=make('div',undefined,'manual-actions');
  const openPdf=make('a','開啟／列印員工手冊 PDF');openPdf.href='./manuals/employee-handbook-2026-11-06.pdf';openPdf.target='_blank';openPdf.rel='noopener noreferrer';
  const downloadPdf=make('a','下載員工手冊 PDF');downloadPdf.href='./manuals/employee-handbook-2026-11-06.pdf';downloadPdf.download='';
@@ -359,7 +359,7 @@ function createTraining(){
  }
  function filter(value){const query=value.trim().toLocaleLowerCase('zh-TW');let count=0;for(const {item,details} of sections){const visible=[item.title,...item.steps,...item.notes].join(' ').toLocaleLowerCase('zh-TW').includes(query);details.hidden=!visible;if(query&&visible)details.open=true;if(visible)count++;}results.textContent=query?(count?`找到 ${count} 個相關章節`:'沒有找到相關步驟，請換個關鍵字，或清空搜尋查看全部。'):`共 ${sections.length} 個章節；可點章節名稱或展開下方步驟。`;}
  search.oninput=()=>filter(search.value);filter('');
- dialog.append(header,intro,quick,manual,searchLabel,search,results,nav,content,make('p','版本 v3.2.3｜現有收費不變。經辦直接報價，以團隊最新保存版本及公司約定為準。','training-footer'));
+ dialog.append(header,intro,quick,manual,searchLabel,search,results,nav,content,make('p','版本 v3.2.4｜現有收費不變。經辦直接報價，以團隊最新保存版本及公司約定為準。','training-footer'));
  dialog.addEventListener('close',()=>{if(returnFocus?.isConnected)returnFocus.focus();});document.body.append(dialog);
 }
 export function openTraining(){if(!dialog)createTraining();returnFocus=document.activeElement;if(!dialog.open)dialog.showModal();dialog.querySelector('.training-close').focus();}
