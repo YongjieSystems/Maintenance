@@ -1,8 +1,8 @@
 let catalogueContext=null;
 export async function saveSharedCatalogue(catalogue,revision){if(!catalogueContext || catalogueContext.role!=='MANAGER')throw Error('只有主管可修改公司共用價目');const {client,org}=catalogueContext;const r=await client.rpc('yj_save_repair_catalogue',{p_org:org,p_expected:revision,p_catalogue:catalogue});if(r.error)throw r.error;if(catalogueContext?.org!==org)throw Error('團隊已切換，請重新載入價目');return r.data;}
-import {initTeamWorkspace} from './team-workspace.js?v=3.2.2';
-import {amountText,adjustmentText,customerRepairSummary} from './repair-core.js?v=3.2.2';
-import {teamError} from './team-core.js?v=3.2.2';
+import {initTeamWorkspace} from './team-workspace.js?v=3.2.3';
+import {amountText,adjustmentText,customerRepairSummary} from './repair-core.js?v=3.2.3';
+import {teamError} from './team-core.js?v=3.2.3';
 let resetLink=()=>{},saveTeam=async()=>{throw Error('團隊功能尚未就緒，請稍候');};
 export const saveRepairToTeam=()=>saveTeam();
 export const resetRepairLink=()=>resetLink();

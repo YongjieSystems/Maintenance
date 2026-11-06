@@ -1,8 +1,8 @@
-import {createNoticeBoard} from './notice-board.js?v=3.2.2';
-import { createLoginSession, watchLoginSession, LOGIN_MODES } from './login-session.js?v=3.2.2';
+import {createNoticeBoard} from './notice-board.js?v=3.2.3';
+import { createLoginSession, watchLoginSession, LOGIN_MODES } from './login-session.js?v=3.2.3';
 import { createClient } from './vendor/supabase.js?v=1.4.1';
-import { TEAM_CONFIG } from './team-config.js?v=3.2.2';
-import { effectiveTeamRole, TEAM_ROLES, teamPayload, teamError, localToIso, isoToTaipeiInput, teamFetch } from './team-core.js?v=3.2.2';
+import { TEAM_CONFIG } from './team-config.js?v=3.2.3';
+import { effectiveTeamRole, TEAM_ROLES, teamPayload, teamError, localToIso, isoToTaipeiInput, teamFetch } from './team-core.js?v=3.2.3';
 
 export function initTeamWorkspace({getRecord,onOpenRecord,onSaved,onContext=async()=>{},kind='INSPECTION'}) {
     const $=id=>document.getElementById(id);

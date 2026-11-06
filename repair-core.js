@@ -1,4 +1,4 @@
-import {QUOTE_DECLARATIONS} from './customer-declaration.js?v=3.2.2';
+import {QUOTE_DECLARATIONS} from './customer-declaration.js?v=3.2.3';
 // Shared by the screen, saved quotations and exports. Price-book values stay unchanged.
 export const money = value => Math.round((value + Number.EPSILON) * 100) / 100;
 export const amountText = (min, max = min) => min === max
