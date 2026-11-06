@@ -64,3 +64,21 @@ export function askOutput(host,review,unsaved,execute,save,notify) {
  }
  const cancel=add('button','返回修改');cancel.type='button';cancel.onclick=()=>{host.hidden=true;};
 }
+
+// Try the modern clipboard first, then the browser's selection-based copy.
+// A denied clipboard is recoverable: the caller shows selectable customer text.
+export async function copyCustomerText(text, env={}) {
+ const nav=env.navigator ?? globalThis.navigator,doc=env.document ?? globalThis.document;
+ if(nav?.clipboard?.writeText){try{await nav.clipboard.writeText(text);return true;}catch{}}
+ if(!doc?.createElement || !doc?.body)return false;
+ let field;const focused=doc.activeElement;
+ try{
+  field=doc.createElement('textarea');field.value=text;field.readOnly=true;
+  field.setAttribute('aria-label','客戶報價複製備援');
+  field.style.cssText='position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;font-size:16px';
+  // Appending inside the active modal keeps the fallback out of its inert background.
+  const parent=doc.querySelector?.('dialog[open]') || doc.body;parent.append(field);
+  field.focus();field.select();field.setSelectionRange?.(0,text.length);
+  return doc.execCommand?.('copy')===true;
+ }catch{return false;}finally{field?.remove();focused?.focus?.({preventScroll:true});}
+}

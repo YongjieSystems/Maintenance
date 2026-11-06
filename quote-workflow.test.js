@@ -60,3 +60,17 @@ test('repair direct-save preserves version checks, service details and failure s
  vm.runInNewContext(body+';this.save=saveTeam',ctx);await ctx.save();assert.equal(last.p_expected,3);assert.equal(last.p_source_expected,4);assert.equal(last.p_service,'PICKUP');assert.equal(last.p_window,'週二取件');assert.equal(saved,1);
  fail=true;await assert.rejects(ctx.save(),/離線/);assert.equal(saved,1);assert.equal(ctx.saving,false);
 });
+
+test('modern clipboard succeeds without creating fallback elements',async()=>{
+ const {copyCustomerText}=await import('./quote-workflow.js');let actual='';assert.equal(await copyCustomerText('報價',{navigator:{clipboard:{writeText:async t=>actual=t}},document:{createElement(){throw Error('must not run')}}}),true);assert.equal(actual,'報價');
+});
+test('clipboard denial uses selection copy, restores focus and removes transient field',async()=>{
+ const {copyCustomerText}=await import('./quote-workflow.js');let selected=false,removed=false,focused=false,inside=false;
+ const field={style:{},setAttribute(){},focus(){},select(){selected=true},setSelectionRange(){},remove(){removed=true}};
+ const doc={activeElement:{focus(){focused=true}},body:{append(){}},querySelector:()=>({append(){inside=true}}),createElement:()=>field,execCommand:command=>command==='copy'&&selected};
+ assert.equal(await copyCustomerText('測試報價',{navigator:{clipboard:{writeText:async()=>{throw Error('denied')}}},document:doc}),true);assert.equal(field.value,'測試報價');assert.ok(removed&&focused&&inside);
+});
+test('unavailable or denied clipboard can fall back to manual copying without throwing',async()=>{
+ const {copyCustomerText}=await import('./quote-workflow.js');assert.equal(await copyCustomerText('報價',{navigator:{},document:{}}),false);
+ const field={style:{},setAttribute(){},focus(){},select(){},remove(){}};assert.equal(await copyCustomerText('報價',{navigator:{},document:{body:{append(){}},createElement:()=>field,execCommand:()=>false}}),false);
+});

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>維修費估價程式v3.2.0 | 專業維修估價系統</title>
+    <title>維修費估價程式v3.2.1 | 專業維修估價系統</title>
     
     <!-- Error Handling Script (Must be first) -->
     <script>
@@ -88,7 +88,7 @@
       }
     }
     </script>
-<link rel="stylesheet" href="./interface.css?v=3.2.0">
+<link rel="stylesheet" href="./interface.css?v=3.2.1">
 <style>#customer-print-only{display:none}@media print{body>*{display:none!important}#customer-print-only{display:block!important;padding:20px}#customer-print-only pre{font:16px/1.8 "Microsoft JhengHei",sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}}</style>
 <style>
 /* Consistent save/output workflow, employee-only. */
@@ -176,11 +176,11 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import ReactDOM from 'react-dom/client';
-        import { openTraining } from './training.js?v=3.2.0';
-        import { FAULT_TEMPLATES, NOTE_TEMPLATES, appendTemplate, repairHints, askOutput } from './quote-workflow.js?v=3.2.0';
-        import { initRepairTeam, openRepairTeam, resetRepairLink, saveSharedCatalogue, saveRepairToTeam } from './repair-team.js?v=3.2.0';
-        import { changeCatalogue, validateCatalogue, cataloguePreview } from './catalogue-core.js?v=3.2.0';
-        import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue, customerRepairSummary } from './repair-core.js?v=3.2.0';
+        import { openTraining } from './training.js?v=3.2.1';
+        import { FAULT_TEMPLATES, NOTE_TEMPLATES, appendTemplate, repairHints, copyCustomerText } from './quote-workflow.js?v=3.2.1';
+        import { initRepairTeam, openRepairTeam, resetRepairLink, saveSharedCatalogue, saveRepairToTeam } from './repair-team.js?v=3.2.1';
+        import { changeCatalogue, validateCatalogue, cataloguePreview } from './catalogue-core.js?v=3.2.1';
+        import { money, calculateQuote, amountText, adjustmentText, createOrderId, quoteVersion, validateIssue, customerRepairSummary } from './repair-core.js?v=3.2.1';
         import { 
           Monitor, Laptop, Printer, Droplet, HardDrive, Cpu, 
           Wrench, ChevronRight, AlertCircle, Clock, Save, 
@@ -1408,6 +1408,11 @@
           const [saveMessage, setSaveMessage] = useState('');
           const [teamSaved,setTeamSaved]=useState({key:'',label:'尚未保存到團隊'});
           const [workflowBusy,setWorkflowBusy]=useState(false);
+          const [outputRequest,setOutputRequest]=useState(null);
+          const [manualCopy,setManualCopy]=useState('');
+          const [outputMessage,setOutputMessage]=useState('');
+          const outputDialog=useRef(null),manualText=useRef(null),outputRunning=useRef(false);
+          useEffect(()=>{const dialog=outputDialog.current;if(outputRequest || manualCopy){if(!dialog?.open)dialog?.showModal?.();}else if(dialog?.open)dialog.close();},[outputRequest,manualCopy]);
           const canonicalQuote=useRef({key:'',orderId:'',revision:0});
           const [repairService,setRepairService]=useState('IN_STORE');
           const [deliveryWindow,setDeliveryWindow]=useState('');
@@ -1722,22 +1727,17 @@
 
           const generateClipboardText = (snap) => customerRepairSummary(snap);
 
+          const copyTextWithFeedback = async (text,snap=null) => {
+              const copied=await copyCustomerText(text,{navigator,document});
+              if(copied){if(snap)addToHistory(snap);setSaveMessage('✓ 已複製客戶報價，可貼到LINE或訊息。');setOutputMessage('✓ 已複製客戶報價。');setManualCopy('');return true;}
+              setManualCopy(text);setOutputMessage('這個瀏覽器未允許自動複製。請按「選取全部文字」，再用手機的複製功能；也可改用Chrome或Safari開啟網站。');
+              setSaveMessage('自動複製未完成，已開啟可手動複製的客戶報價。');return false;
+          };
           const copyCurrent = async () => {
-              const snap = buildSnapshot();
-              if (!snap) return;
-              
-              const text = generateClipboardText(snap);
-              return navigator.clipboard.writeText(text).then(() => {
-                  if (addToHistory(snap)) setSaveMessage('✓ 已複製客戶報價；本機亦已備援。');
-              }).catch(() => {throw Error('複製失敗，請確認瀏覽器允許剪貼簿操作。');});
+              const snap=buildSnapshot();if(!snap)return false;
+              return copyTextWithFeedback(generateClipboardText(snap),snap);
           };
-
-          const handleHistoryCopy = (item) => {
-              const text = generateClipboardText(item);
-              return navigator.clipboard.writeText(text).then(() => {
-                  alert('歷史紀錄已複製到剪貼簿！');
-              }).catch(() => {throw Error('複製失敗，請確認瀏覽器允許剪貼簿操作。');});
-          };
+          const handleHistoryCopy = (item) => copyTextWithFeedback(generateClipboardText(item)).catch(error=>{setSaveMessage(error.message);});
 
           const generateExcelFile = (snap) => {
               const wb = XLSX.utils.book_new();
@@ -1768,14 +1768,30 @@
             if(workflowBusy)throw Error('正在保存，請稍候');
             setWorkflowBusy(true);try{const r=await saveRepairToTeam();setSaveMessage('已保存到團隊，可交付客戶');return r;}finally{setWorkflowBusy(false);}
           };
-          const requestOutput=(mode)=>{
-            const key=workflowKey;
-            const execute=async()=>{if(!isAuthenticated)throw Error('請先登入員工帳號');if(latestWorkflow.current!==key)throw Error('內容已變更，請重新按輸出');
-              if(mode==='copy')await copyCurrent();else if(mode==='excel')excelCurrent();else printCurrent();};
-            if(workflowReview.errors.length||workflowReview.warnings.length||teamSaved.key!==workflowKey)
-              askOutput(document.getElementById('workflow-confirm'),workflowReview,teamSaved.key!==workflowKey,execute,saveToTeam,setSaveMessage);
-            else execute().catch(e=>setSaveMessage(e.message));
+          const executeOutput=async(mode,key)=>{
+            if(!isAuthenticated)throw Error('請先登入員工帳號');
+            if(latestWorkflow.current!==key)throw Error('內容已變更，請返回修改後重新按輸出');
+            if(mode==='copy')return copyCurrent();if(mode==='excel')excelCurrent();else printCurrent();return true;
           };
+          const requestOutput=(mode)=>{
+            setOutputMessage('');setManualCopy('');
+            if(workflowReview.errors.length||workflowReview.warnings.length||teamSaved.key!==workflowKey)
+              setOutputRequest({mode,key:workflowKey});
+            else executeOutput(mode,workflowKey).catch(error=>{setSaveMessage(error.message);setOutputMessage(error.message);});
+          };
+          const confirmOutput=async(withSave)=>{
+            if(outputRunning.current || !outputRequest)return;
+            if(outputRequest.key!==latestWorkflow.current){setOutputMessage('內容已變更，請返回修改後重新按輸出');return;}
+            if(workflowReview.errors.length)return;
+            outputRunning.current=true;setWorkflowBusy(true);setOutputMessage(withSave?'正在保存到團隊，請稍候…':'正在準備客戶報價…');
+            try{
+              if(withSave)await saveRepairToTeam();
+              const copied=await executeOutput(outputRequest.mode,outputRequest.key);
+              setOutputRequest(null);if(copied)setOutputMessage('');
+            }catch(error){const message=error?.message || '操作未完成，原輸入已保留';setOutputMessage(message);setSaveMessage(message);}
+            finally{outputRunning.current=false;setWorkflowBusy(false);}
+          };
+          const closeOutput=()=>{if(outputRunning.current)return;setOutputRequest(null);setManualCopy('');setOutputMessage('');};
           const handleCopySummary=()=>requestOutput('copy');
           const handlePrint=()=>requestOutput('print');
           const handleExportExcel=()=>requestOutput('excel');
@@ -1847,7 +1863,7 @@
                         <h1 className="text-lg font-bold text-slate-800 leading-tight">維修費估價程式</h1>
                       </div>
                     </div>
-                    <div className="header-actions flex gap-2"><button type="button" onClick={openTraining} className="px-4 py-2 bg-blue-50 text-blue-800 rounded-lg text-sm">操作說明／教育訓練</button><a href="./repair-warranty.html?v=3.2.0" target="_blank" rel="noopener noreferrer" className="warranty-template-link px-4 py-3 rounded-xl bg-blue-50 text-blue-800">維修保固條款（另印）</a>
+                    <div className="header-actions flex gap-2"><button type="button" onClick={openTraining} className="px-4 py-2 bg-blue-50 text-blue-800 rounded-lg text-sm">操作說明／教育訓練</button><a href="./repair-warranty.html?v=3.2.1" target="_blank" rel="noopener noreferrer" className="warranty-template-link px-4 py-3 rounded-xl bg-blue-50 text-blue-800">維修保固條款（另印）</a>
                         <button onClick={openRepairTeam} className="px-4 py-2 bg-emerald-700 text-white rounded-lg text-sm">團隊紀錄／收送</button>
                         <button onClick={handleNewCase} className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium">＋ 新案件</button>
                         <label className="restore-backup px-4 py-2 bg-slate-100 rounded-lg text-sm cursor-pointer">還原案件<input aria-label="還原案件備份" type="file" accept=".json,application/json" onChange={handleRestoreBackup} className="hidden" /></label>
@@ -1862,7 +1878,7 @@
                   </header>
 
                   <div className="case-status no-print" role="status">
-                    <strong>{visibleOrderId} / 第 {visibleRevision} 版 · v3.2.0</strong>
+                    <strong>{visibleOrderId} / 第 {visibleRevision} 版 · v3.2.1</strong>
                     <span>經辦人可直接保存、複製或列印報價，不需主管核准；共用案件可直接按「保存到團隊」；紀錄與收送安排請到團隊頁查看。</span>
                     <span>公司共用價目 第 {bookState.revision} 版 · {bookState.role==='MANAGER'?'主管可維護':'由主管維護'}</span>
                     {catalogueMessage && <span role="status">{catalogueMessage}</span>}
@@ -2499,11 +2515,11 @@
                         <p role="status">{teamSaved.label}{teamSaved.key!==workflowKey?' · 有內容尚未保存':''}</p>
                         {!!workflowReview.warnings.length && <p>交付前提醒：{workflowReview.warnings.join('；')}</p>}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><label>維修交付方式<select value={repairService} onChange={e=>setRepairService(e.target.value)}><option value="IN_STORE">到店維修</option><option value="PICKUP">收送維修</option></select></label>{repairService==='PICKUP' && <label>約定收送時段與範圍<input maxLength={500} value={deliveryWindow} onChange={e=>setDeliveryWindow(e.target.value)} placeholder="例：週二上午取件，回送時間另約" /></label>}</div>
-                        <p>交付方式不會自動加減運費，請核對運費欄；本機備援不等於團隊保存。</p><div id="workflow-confirm" hidden></div>
+                        <p>交付方式不會自動加減運費，請核對運費欄；本機備援不等於團隊保存。</p>
                       </section>}
                       {selectedIssue && (
                         <div className="action-bar no-print p-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-                           <div className="text-xs text-slate-400">最後更新: {new Date().toLocaleDateString()}</div>
+                           <div><p className="copy-action-feedback" role="status">{saveMessage}</p><div className="text-xs text-slate-400">最後更新: {new Date().toLocaleDateString()}</div></div>
                            <div className="flex flex-wrap gap-2">
                                <button disabled={workflowBusy || quote.errors.length>0} onClick={()=>saveToTeam().catch(e=>setSaveMessage(e.message))} className="bg-primary-600 text-white px-4 py-3 rounded-lg">保存到團隊</button>
                                <button disabled={quote.errors.length > 0} onClick={() => {const snap = buildSnapshot(); if (snap) addToHistory(snap);}} className="flex items-center justify-center bg-primary-600 text-white px-4 py-2 rounded-lg">保存本機報價</button>
@@ -2527,6 +2543,27 @@
                     </div>
                   </div>
 
+                  <dialog ref={outputDialog} className="customer-output-dialog no-print" aria-labelledby="customer-output-title" onCancel={e=>{if(outputRunning.current)e.preventDefault();else closeOutput();}} onClose={closeOutput}>
+                    <h2 id="customer-output-title">{manualCopy?'手動複製客戶報價':'交付客戶報價前確認'}</h2>
+                    {outputMessage && <p role="status" className="output-message">{outputMessage}</p>}
+                    {manualCopy ? <>
+                      <p>以下只有客戶報價內容，不含內部提示。選取後長按文字，選「複製」，再貼到LINE。</p>
+                      <textarea ref={manualText} readOnly aria-label="可手動複製的客戶報價" value={manualCopy} />
+                      <div className="output-dialog-actions"><button type="button" onClick={()=>{manualText.current?.focus();manualText.current?.select();manualText.current?.setSelectionRange(0,manualCopy.length);}}>選取全部文字</button><button type="button" onClick={closeOutput}>完成／關閉</button></div>
+                    </> : <>
+                      {!!workflowReview.errors.length ? <ul>{workflowReview.errors.map(t=><li key={t}>{t}</li>)}</ul> : <>
+                        {!!workflowReview.warnings.length && <ul>{workflowReview.warnings.map(t=><li key={t}>{t}</li>)}</ul>}
+                        {teamSaved.key!==workflowKey && <p>目前有內容尚未保存到團隊。可先保存再交付，或只輸出目前畫面。</p>}
+                      </>}
+                      <div className="output-dialog-actions">
+                        {!workflowReview.errors.length && <>
+                          {teamSaved.key!==workflowKey && <button type="button" disabled={workflowBusy} onClick={()=>confirmOutput(true)}>保存到團隊並繼續</button>}
+                          <button type="button" disabled={workflowBusy} onClick={()=>confirmOutput(false)}>{teamSaved.key!==workflowKey?'只輸出目前畫面':'確認後繼續'}</button>
+                        </>}
+                        <button type="button" disabled={workflowBusy} onClick={closeOutput}>返回修改</button>
+                      </div>
+                    </>}
+                  </dialog>
                   <AddDataModal isOpen={showAdminModal} onClose={() => setShowAdminModal(false)} categoryData={data} onSave={handleAddData} onReset={handleResetDatabase} onDownloadBackup={handleDownloadBackup} />
                   
                   <EditDataModal 

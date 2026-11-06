@@ -42,7 +42,7 @@ function harness(seed={},authenticated=true) {
  const nodes=()=>walk(tree);
  const text=node=>!node?'':typeof node==='string'||typeof node==='number'?String(node):(node.props?.children||[]).map(text).join('');
  const find=label=>{const node=nodes().find(n=>n.props?.onClick&&text(n).includes(label));assert.ok(node,`control ${label}`);return node;};
- const click=label=>{find(label).props.onClick();return render();};
+ const click=label=>{find(label).props.onClick();render();if(context.autoConfirm!==false && ['複製客戶報價','Excel','列印客戶報價'].includes(label)){const button=nodes().find(n=>n.props?.onClick&&['只輸出目前畫面','確認後繼續'].includes(text(n)));if(button){button.props.onClick();render();}}return tree;};
  const input=(field,value)=>{const node=nodes().find(n=>n.props?.onChange?.toString().includes(field));assert.ok(node,`input ${field}`);node.props.onChange({target:{value}});render();};
  const history=()=>JSON.parse(store.get('yjst_repair_history_v1')||'[]');
  const select=()=>{click('桌上型電腦');click('一般組裝電腦');click('無法開機 (No Power)');};
@@ -70,10 +70,10 @@ test('quote UI → validation → save → dedupe → revision → load → new 
 });
 test('copy, Excel and print include adjustment reason and allow direct quotation',async()=>{
  const h=harness();h.select();h.input('manualTotalMin','100');h.input('adjustmentReason','測試議價');h.input('technicianNotes','Customer note');
- h.click('複製客戶報價');await Promise.resolve();h.render();const preview=h.nodes().find(n=>n.type==='details'&&n.props.className==='customer-preview no-print');assert.equal(h.text(preview.props.children.find(n=>n?.type==='pre')),h.clipboard[0]);assert.match(h.clipboard[0],/維修整包費用：\$100/);assert.doesNotMatch(h.clipboard[0],/價差|報價人員|共用案件|核准後另提供|此為草稿/);assert.match(h.clipboard[0],/報價調整原因：測試議價/);assert.match(h.clipboard[0],/【永捷維修報價】/);assert.match(h.clipboard[0],/【報價聲明】/);assert.match(h.clipboard[0],/不維修仍須支付已約定/);assert.doesNotMatch(h.clipboard[0],/【服務約定】|成本邏輯|油資/);
+ h.click('複製客戶報價');for(let n=0;n<8;n++)await Promise.resolve();h.render();const preview=h.nodes().find(n=>n.type==='details'&&n.props.className==='customer-preview no-print');assert.equal(h.text(preview.props.children.find(n=>n?.type==='pre')),h.clipboard[0]);assert.match(h.clipboard[0],/維修整包費用：\$100/);assert.doesNotMatch(h.clipboard[0],/價差|報價人員|共用案件|核准後另提供|此為草稿/);assert.match(h.clipboard[0],/報價調整原因：測試議價/);assert.match(h.clipboard[0],/【永捷維修報價】/);assert.match(h.clipboard[0],/【報價聲明】/);assert.match(h.clipboard[0],/不維修仍須支付已約定/);assert.doesNotMatch(h.clipboard[0],/【服務約定】|成本邏輯|油資/);
  assert.equal(h.clipboard[0].split('Customer note').length-1,1);assert.equal(h.nodes().filter(n=>n.type==='textarea'&&n.props.id==='customer-quote-notes').length,1);
  const sheets=[];h.context.XLSX={utils:{book_new:()=>({}),aoa_to_sheet:rows=>{sheets.push(rows);return {}},book_append_sheet(){}},writeFile(){}};
- h.click('Excel');const rows=sheets[0];assert.ok(JSON.stringify(rows).includes('Customer note'));assert.ok(rows.some(row=>row[0]==='維修整包費用：$100'));assert.ok(JSON.stringify(rows).includes('報價調整原因：測試議價'));assert.equal(h.history().length,1);
+ h.click('Excel');for(let n=0;n<8;n++)await Promise.resolve();h.render();const rows=sheets[0];assert.ok(JSON.stringify(rows).includes('Customer note'));assert.ok(rows.some(row=>row[0]==='維修整包費用：$100'));assert.ok(JSON.stringify(rows).includes('報價調整原因：測試議價'));assert.equal(h.history().length,1);
  h.click('列印客戶報價');assert.equal(h.printed,1);assert.equal(h.printText,h.clipboard[0]);assert.equal(h.history().length,1);
  h.input('shippingCost',-1);assert.equal(h.find('列印客戶報價').props.disabled,true);
 });
@@ -144,4 +144,15 @@ test('repair preview and output use the saved team number and version without ch
  const preview=h.nodes().find(n=>n.type==='details'&&n.props.className==='customer-preview no-print');const text=h.text(preview.props.children.find(n=>n?.type==='pre'));
  assert.match(text,/R-CANONICAL-QA／第4版/);h.click('複製客戶報價');await Promise.resolve();assert.equal(h.clipboard[0],text);assert.match(text,/800.*3,500/);
  h.input('customerName','另一位客戶');const changed=h.context.bridge.getSnapshot();assert.notEqual(changed.orderId,'R-CANONICAL-QA');
+});
+
+test('copy confirmation is a modal and never silently copies before confirmation',()=>{
+ const h=harness();h.context.autoConfirm=false;h.select();h.click('複製客戶報價');
+ assert.equal(h.clipboard.length,0);const dialog=h.nodes().find(n=>n.type==='dialog'&&n.props.className==='customer-output-dialog no-print');assert.ok(dialog);assert.equal(dialog.props['aria-labelledby'],'customer-output-title');
+ h.click('只輸出目前畫面');assert.equal(h.clipboard.length,1);
+});
+test('denied clipboard opens selectable customer text without internal instructions',async()=>{
+ const h=harness();h.select();h.input('customerName','測試客戶');h.context.navigator.clipboard.writeText=async()=>{throw Error('NotAllowedError')};
+ h.click('複製客戶報價');for(let n=0;n<8;n++)await Promise.resolve();h.render();
+ const field=h.nodes().find(n=>n.type==='textarea'&&n.props['aria-label']==='可手動複製的客戶報價');assert.ok(field);assert.match(field.props.value,/【永捷維修報價】/);assert.doesNotMatch(field.props.value,/只輸出目前畫面|NotAllowedError|保存到團隊並繼續/);assert.equal(h.clipboard.length,0);assert.match(h.text(h.render()),/自動複製未完成/);
 });

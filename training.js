@@ -1,4 +1,4 @@
-export const TRAINING_SECTIONS = [
+export const TRAINING_SECTIONS = [{"id": "copy-mobile-fix", "title": "複製沒有反應怎麼辦？", "steps": ["按「複製客戶報價」後，未保存或有漏填會在畫面中央出現確認視窗。選先保存，或只輸出目前畫面。", "成功時會顯示「已複製客戶報價」，再貼到LINE。", "若瀏覽器拒絕剪貼簿，系統會開啟客戶文字；按「選取全部文字」，長按選「複製」。亦可用Chrome或Safari開啟網站再試。"], "notes": ["保存失敗或內容已變更會留在確認視窗，不會假裝複製成功。"]},
   {
     "id": "save-output-v6",
     "title": "新版：保存、輸出與提醒",
@@ -361,7 +361,7 @@ function createTraining(){
  }
  function filter(value){const query=value.trim().toLocaleLowerCase('zh-TW');let count=0;for(const {item,details} of sections){const visible=[item.title,...item.steps,...item.notes].join(' ').toLocaleLowerCase('zh-TW').includes(query);details.hidden=!visible;if(query&&visible)details.open=true;if(visible)count++;}results.textContent=query?(count?`找到 ${count} 個相關章節`:'沒有找到相關步驟，請換個關鍵字，或清空搜尋查看全部。'):`共 ${sections.length} 個章節；可點章節名稱或展開下方步驟。`;}
  search.oninput=()=>filter(search.value);filter('');
- dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v3.2.0｜現有收費不變。經辦直接報價，以團隊最新保存版本及公司約定為準。','training-footer'));
+ dialog.append(header,intro,manual,searchLabel,search,results,nav,content,make('p','版本 v3.2.1｜現有收費不變。經辦直接報價，以團隊最新保存版本及公司約定為準。','training-footer'));
  dialog.addEventListener('close',()=>{if(returnFocus?.isConnected)returnFocus.focus();});document.body.append(dialog);
 }
 export function openTraining(){if(!dialog)createTraining();returnFocus=document.activeElement;if(!dialog.open)dialog.showModal();dialog.querySelector('.training-close').focus();}
