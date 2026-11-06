@@ -325,7 +325,7 @@ export const TRAINING_SECTIONS = [
       "正式交班前，確認團隊已保存的版本、待估項目與收送約定；不要把內部提示截圖當客戶報價。"
     ],
     "notes": [
-      "版本：2026-11-06 第7版。適用檢測2.1.2、維修3.2.2、租賃2.2.2；現有收費及員工權限不變。",
+      "版本：2026-11-06 第8版。適用檢測2.1.5、維修3.2.5、租賃2.2.5；現有收費及員工權限不變。",
       "保存失敗怎麼辦：確認視窗會顯示離線、版本衝突等原因，且不會繼續複製。按返回修改或處理原因後重試；不要連續重複按。"
     ]
   }
@@ -343,9 +343,9 @@ function createTraining(){
  const quickDownload=make('a','下載快速操作表 PDF');quickDownload.href='./manuals/quote-quick-reference-2026-11-06-v2.pdf';quickDownload.download='';
  quick.append(make('p','座位旁參考：一頁快速操作表（A4）。三套共用，含正式網址、QR Code、保存、複製與手機手動複製。'),quickOpen,quickDownload);
  const manual=make('div',undefined,'manual-actions');
- const openPdf=make('a','開啟／列印員工手冊 PDF');openPdf.href='./manuals/employee-handbook-2026-11-06.pdf';openPdf.target='_blank';openPdf.rel='noopener noreferrer';
- const downloadPdf=make('a','下載員工手冊 PDF');downloadPdf.href='./manuals/employee-handbook-2026-11-06.pdf';downloadPdf.download='';
- manual.append(make('p','三套程式共用完整手冊｜2026/11/06 第7版・22 頁。含中央確認視窗、複製成功提示、手機手動複製、保存、列印及完整接案流程。'),openPdf,downloadPdf);
+ const openPdf=make('a','開啟／列印員工手冊 PDF');openPdf.href='./manuals/employee-handbook-2026-11-06-v8.pdf';openPdf.target='_blank';openPdf.rel='noopener noreferrer';
+ const downloadPdf=make('a','下載員工手冊 PDF');downloadPdf.href='./manuals/employee-handbook-2026-11-06-v8.pdf';downloadPdf.download='';
+ manual.append(make('p','三套程式共用完整手冊｜2026/11/06 第8版・22 頁。含三套正式網址與 QR Code、中央確認視窗、複製成功提示、手機手動複製、保存、列印及完整接案流程。'),openPdf,downloadPdf);
  const searchLabel=make('label','搜尋步驟（例如：新增員工、保存報價、回送）','training-search-label');searchLabel.htmlFor='training-search';
  const search=make('input');search.id='training-search';search.type='search';search.placeholder='輸入關鍵字';search.autocomplete='off';
  const results=make('p',undefined,'training-results');results.setAttribute('role','status');results.setAttribute('aria-live','polite');
@@ -359,7 +359,7 @@ function createTraining(){
  }
  function filter(value){const query=value.trim().toLocaleLowerCase('zh-TW');let count=0;for(const {item,details} of sections){const visible=[item.title,...item.steps,...item.notes].join(' ').toLocaleLowerCase('zh-TW').includes(query);details.hidden=!visible;if(query&&visible)details.open=true;if(visible)count++;}results.textContent=query?(count?`找到 ${count} 個相關章節`:'沒有找到相關步驟，請換個關鍵字，或清空搜尋查看全部。'):`共 ${sections.length} 個章節；可點章節名稱或展開下方步驟。`;}
  search.oninput=()=>filter(search.value);filter('');
- dialog.append(header,intro,quick,manual,searchLabel,search,results,nav,content,make('p','版本 v3.2.4｜現有收費不變。經辦直接報價，以團隊最新保存版本及公司約定為準。','training-footer'));
+ dialog.append(header,intro,quick,manual,searchLabel,search,results,nav,content,make('p','版本 v3.2.5｜現有收費不變。經辦直接報價，以團隊最新保存版本及公司約定為準。','training-footer'));
  dialog.addEventListener('close',()=>{if(returnFocus?.isConnected)returnFocus.focus();});document.body.append(dialog);
 }
 export function openTraining(){if(!dialog)createTraining();returnFocus=document.activeElement;if(!dialog.open)dialog.showModal();dialog.querySelector('.training-close').focus();}
